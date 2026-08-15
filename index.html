@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviator Gold - Premium Betting Platform</title>
+    <!-- Google Font for clean modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK Compat versions for easy browser integration -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #ffffff; /* Crisp white background */
+            --card-bg: #fdfaf2; /* Soft warm light-gold card background */
+            --primary-gold: #b38b1d; /* Rich Dark Metallic Gold for readability */
+            --accent-gold: #d4af37; /* Vibrant Gold */
+            --accent-green: #27ae60; /* Success Green */
+            --text-dark: #1f1a0f; /* Deep dark gold-black text for white theme */
+            --text-muted: #7c6d48; /* Elegant muted gold-gray text */
+            --border-gold: #e6dfcb; /* Soft border color */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f4f3ef; /* Light gray-cream backdrop */
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Responsive Smartphone Frame Container - Light Theme */
+        .phone-container {
+            width: 100%;
+            max-width: 420px;
+            height: 90vh;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(179, 139, 29, 0.15), 0 0 25px rgba(212, 175, 55, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid #e2d9c2;
+        }
+
+        /* Screen Manager States */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px; /* Safe space for bottom navigation */
+            background-color: #ffffff;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* App Header */
+        .app-header {
+            background-color: #ffffff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-gold);
+        }
+
+        .app-header h1 {
+            font-size: 1.25rem;
+            color: var(--primary-gold);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 3px rgba(179, 139, 29, 0.1);
+        }
+
+        .balance-badge {
+            background: linear-gradient(135deg, #fdfbf7, #f7f3e8);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--primary-gold);
+            font-size: 0.9rem;
+            color: var(--primary-gold);
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(179, 139, 29, 0.1);
+        }
+
+        /* Premium Forms Control */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid var(--border-gold);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
+        }
+
+        /* Buttons Design */
+        .btn {
+            background: linear-gradient(135deg, var(--accent-gold), var(--primary-gold));
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s, transform 0.1s;
+            box-shadow: 0 3px 6px rgba(179, 139, 29, 0.2);
+        }
+
+        .btn:hover {
+            opacity: 0.95;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #f7f5f0;
+            color: var(--text-dark);
+            border: 1px solid var(--border-gold);
+        }
+
+        /* Custom SVG Plane Icon and Flying Arena - Clean Bright Light Style */
+        .game-arena {
+            background: linear-gradient(180deg, #fdfdfa 0%, #f7f3e6 100%);
+            border-radius: 12px;
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid var(--border-gold);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .multiplier-text {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: var(--primary-gold);
+            z-index: 5;
+            text-shadow: 0 1px 4px rgba(179, 139, 29, 0.2);
+        }
+
+        /* High Quality Glowing Vector Plane Styling */
+        .plane-wrapper {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            z-index: 4;
+            display: none;
+            transition: transform 0.1s linear;
+        }
+
+        .plane-svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--primary-gold);
+            filter: drop-shadow(0 2px 4px rgba(179, 139, 29, 0.3));
+        }
+
+        /* Multiplier History badges */
+        .game-history-list {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+
+        .history-badge {
+            background-color: #faf8f5;
+            border: 1px solid var(--border-gold);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: var(--primary-gold);
+            white-space: nowrap;
+        }
+
+        /* Bottom Tab Navigation Bar */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border-gold);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--primary-gold);
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+        }
+
+        /* Wallet tab controls */
+        .wallet-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background-color: #faf8f5;
+            border: 1px solid var(--border-gold);
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-gold), var(--primary-gold));
+            color: #ffffff;
+            border: none;
+        }
+
+        .wallet-sub-section {
+            display: none;
+        }
+
+        .wallet-sub-section.active {
+            display: block;
+        }
+
+        /* History panel lists */
+        .transaction-list {
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            background-color: #faf8f5;
+            border: 1px solid var(--border-gold);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        /* Layout Helper Panels */
+        .info-card {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--primary-gold);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--text-dark);
+        }
+
+        .disabled-info {
+            background-color: #faf6eb;
+            color: var(--primary-gold);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            border: 1px dashed var(--primary-gold);
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+
+    <!-- Universal Top Header -->
+    <div class="app-header" id="appHeader" style="display: none;">
+        <h1>AVIATOR GOLD</h1>
+        <div class="balance-badge">Bal: <span id="userBalance">50.00</span> ETB</div>
+    </div>
+
+    <!-- ================= 1. REGISTRATION SCREEN ================= -->
+    <div class="screen active" id="screenRegister">
+        <div style="text-align: center; margin-bottom: 25px; margin-top: 20px;">
+            <h2 style="color: var(--primary-gold); font-size: 1.8rem; font-weight: bold;">Aviator Gold</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Register for free to start playing</p>
+        </div>
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label for="regName">Full Name</label>
+                <input type="text" id="regName" class="form-control" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+                <label for="regPhone">Phone Number</label>
+                <input type="tel" id="regPhone" class="form-control" placeholder="09xxxxxxxx" required pattern="^(09|07)\d{8}$" title="Please enter a valid Ethiopian phone number">
+            </div>
+            <div class="form-group">
+                <label for="regPassword">6-Digit Password</label>
+                <input type="password" id="regPassword" class="form-control" placeholder="******" maxlength="6" pattern="\d{6}" title="Password must be exactly a 6-digit number" required>
+            </div>
+            <button type="submit" class="btn">Register</button>
+        </form>
+        <p style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">
+            Already have an account? <a href="#" onclick="showScreen('screenLogin')" style="color: var(--primary-gold); text-decoration: none; font-weight: bold;">Login</a>
+        </p>
+    </div>
+
+    <!-- ================= 2. LOGIN SCREEN ================= -->
+    <div class="screen" id="screenLogin">
+        <div style="text-align: center; margin-bottom: 25px; margin-top: 20px;">
+            <h2 style="color: var(--primary-gold); font-size: 1.8rem; font-weight: bold;">Sign In</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Enter your phone number and password to proceed</p>
+        </div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="loginPhone">Phone Number</label>
+                <!-- Fully functional editable login phone input as requested -->
+                <input type="tel" id="loginPhone" class="form-control" placeholder="09xxxxxxxx" required pattern="^(09|07)\d{8}$" title="Please enter a valid Ethiopian phone number">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">6-Digit Password</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="******" maxlength="6" required>
+            </div>
+            <button type="submit" class="btn">Sign In</button>
+        </form>
+        <p style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">
+            New here? <a href="#" onclick="showScreen('screenRegister')" style="color: var(--primary-gold); text-decoration: none; font-weight: bold;">Register</a>
+        </p>
+    </div>
+
+    <!-- ================= 3. HOME TAB (INSTRUCTIONS) ================= -->
+    <div class="screen" id="tabHome">
+        <h3 style="margin-bottom: 15px; font-size: 1.1rem; border-bottom: 2px solid var(--primary-gold); padding-bottom: 5px; color: var(--primary-gold);">About Aviator Game</h3>
+        
+        <div class="info-card">
+            <strong>Welcome to Aviator Gold!</strong><br>
+            Aviator is a modern crash game where you can multiply your stake rapidly based on your exit timing.
+        </div>
+
+        <h4 style="margin: 15px 0 10px 0; color: var(--primary-gold);">How It Works</h4>
+        <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text-dark); display: flex; flex-direction: column; gap: 10px;">
+            <p><strong>1. Place a Stake:</strong> Input your preferred amount before the round begins.</p>
+            <p><strong>2. Flight Phase:</strong> Once takeoff starts, the multiplier ascends from 1.00x upwards exponentially.</p>
+            <p><strong>3. Cash Out:</strong> Secure your winnings by pressing "Cash Out" before the airplane flies away (Crashes).</p>
+            <p><strong>4. Profit Calculation:</strong> Your payout is calculated by multiplying your bet by the current multiplier. For example, a bet of 100 ETB cashed out at 2.50x yields 250 ETB!</p>
+            <p style="color: var(--primary-gold); background-color: rgba(212, 175, 55, 0.08); padding: 8px; border-radius: 6px; font-weight: 600;">
+                Crucial Rule: If the airplane flies away (Crashes) before you exit, your stake is fully lost.
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= 4. GAME TAB (EXPONENTIAL MULTIPLIER AVIATOR) ================= -->
+    <div class="screen" id="tabGame">
+        <!-- Live Multiplier History Panel -->
+        <div class="game-history-list" id="multiplierHistory">
+            <span class="history-badge">1.45x</span>
+            <span class="history-badge">2.80x</span>
+            <span class="history-badge">1.09x</span>
+            <span class="history-badge">12.20x</span>
+            <span class="history-badge">1.94x</span>
+        </div>
+
+        <!-- Flying Arena -->
+        <div class="game-arena" id="arena">
+            <div class="multiplier-text" id="liveMultiplier">1.00x</div>
+            
+            <!-- Highly Stylized Aircraft Vector SVG -->
+            <div class="plane-wrapper" id="plane">
+                <svg class="plane-svg" viewBox="0 0 24 24">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                </svg>
+            </div>
+            
+            <div id="crashMessage" style="position: absolute; color: #ff4757; font-weight: bold; font-size: 1.1rem; display: none; text-shadow: 0 1px 3px rgba(0,0,0,0.15);">FLEW AWAY!</div>
+        </div>
+
+        <!-- Betting Inputs -->
+        <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold);">
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="betAmount">Stake Amount (ETB)</label>
+                <input type="number" id="betAmount" class="form-control" value="10" min="5">
+            </div>
+            
+            <button id="gameActionBtn" class="btn" style="height: 50px; font-size: 1.1rem;" onclick="handleGameAction()">BET</button>
+        </div>
+    </div>
+
+    <!-- ================= 5. WALLET TAB (DEPOSITS & WITHDRAWALS) ================= -->
+    <div class="screen" id="tabWallet">
+        <div class="wallet-tabs">
+            <button class="tab-btn active" id="btnTabDep" onclick="switchWalletTab('deposit')">Deposit</button>
+            <button class="tab-btn" id="btnTabWith" onclick="switchWalletTab('withdraw')">Withdraw</button>
+        </div>
+
+        <!-- Deposit Sub-Section -->
+        <div id="sectionDeposit" class="wallet-sub-section active">
+            <div class="info-card" style="border-left-color: var(--accent-gold);">
+                <strong>Deposit Instructions:</strong><br>
+                Please deposit funds into the banking account details listed below. Once transferred, submit the <strong>Deposited Amount</strong>, <strong>FT (Reference) Number</strong> along with a screenshot of your transaction slip.
+            </div>
+
+            <div style="background-color: #faf8f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-gold);">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Payment Channel Details</p>
+                <p style="font-size: 1.1rem; font-weight: bold; color: var(--text-dark); margin-top: 3px;">0937813516 (Abreham)</p>
+                <p style="font-size: 0.80rem; color: var(--primary-gold); font-weight: bold;">CBE / Telebirr Available</p>
+            </div>
+
+            <form onsubmit="handleDepositSubmit(event)">
+                <!-- Amount input added so we can record exact sum for admin approval -->
+                <div class="form-group">
+                    <label for="depAmount">Deposit Amount (ETB)</label>
+                    <input type="number" id="depAmount" class="form-control" placeholder="Enter deposited amount" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="depFT">Transaction Reference Number (FT)</label>
+                    <input type="text" id="depFT" class="form-control" placeholder="FTXXXXXXXX" required>
+                </div>
+                <div class="form-group">
+                    <label for="depImage">Receipt Screenshot</label>
+                    <input type="file" id="depImage" class="form-control" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn">Submit Deposit</button>
+            </form>
+        </div>
+
+        <!-- Withdraw Sub-Section -->
+        <div id="sectionWithdraw" class="wallet-sub-section">
+            <div class="info-card">
+                <strong>Attention:</strong> After saving your withdrawal details, they cannot be updated internally due to security policies. Please contact external administration to modify details.<br>
+                <strong style="color: var(--primary-gold);">Withdrawal Policy:</strong> Minimum 200 ETB, Maximum 5000 ETB. Restricted to 1 withdrawal per day.
+            </div>
+
+            <form id="withdrawForm" onsubmit="handleWithdrawSave(event)">
+                <div class="form-group">
+                    <label for="withName">Full Name (Account Owner)</label>
+                    <input type="text" id="withName" class="form-control" placeholder="Enter beneficiary name" required>
+                </div>
+                <div class="form-group">
+                    <label for="withAccount">CBE or Telebirr Account Number</label>
+                    <input type="text" id="withAccount" class="form-control" placeholder="Account or wallet number" required>
+                </div>
+                <button type="submit" id="btnSaveWithdraw" class="btn">Save Bank Details</button>
+                <div id="withdrawSavedMsg" class="disabled-info" style="display: none;"></div>
+            </form>
+
+            <div id="actualWithdrawSection" style="margin-top: 15px; border-top: 1px solid var(--border-gold); padding-top: 15px; display: none;">
+                <div class="form-group">
+                    <label for="withAmount">Withdrawal Amount (ETB)</label>
+                    <input type="number" id="withAmount" class="form-control" placeholder="Min 200 ETB, Max 5000 ETB" min="200" max="5000">
+                </div>
+                <button onclick="requestWithdrawal()" class="btn">Request Cash Out</button>
+            </div>
+        </div>
+
+        <!-- Universal Transaction History Logs -->
+        <h4 style="margin: 20px 0 10px 0; font-size: 0.95rem; color: var(--primary-gold);">Transaction History</h4>
+        <div class="transaction-list" id="transactionList">
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">No logs recorded.</p>
+        </div>
+    </div>
+
+    <!-- ================= 6. PROFILE TAB (REFERRALS & LOGOUT) ================= -->
+    <div class="screen" id="tabProfile">
+        <h3 style="margin-bottom: 15px; font-size: 1.1rem; border-bottom: 2px solid var(--primary-gold); padding-bottom: 5px; color: var(--primary-gold);">My Profile</h3>
+        
+        <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px solid var(--border-gold);">
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent-gold), var(--primary-gold)); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px auto; font-size: 1.5rem; font-weight: bold; color: #ffffff;">
+                👤
+            </div>
+            <h4 id="profName">User Profile</h4>
+            <p id="profPhone" style="font-size: 0.85rem; color: var(--text-muted);">09xxxxxxxx</p>
+        </div>
+
+        <!-- Referral Information Card -->
+        <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
+            <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 5px;">Invite Friends & Earn</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+                Share your referral link with your network. When your referred user registers and completes a deposit, an <strong>8% commission</strong> is automatically credited to your balance.
+            </p>
+            <div class="form-group" style="display: flex; gap: 5px; margin-bottom: 8px;">
+                <input type="text" id="refLink" class="form-control" readonly value="https://aviator-gold.com/register?ref=12345" style="font-size: 0.8rem; background-color: #ffffff;">
+                <button onclick="copyRefLink()" class="btn" style="width: auto; padding: 0 15px; font-size: 0.85rem; background: #faf8f5; color: var(--primary-gold); border: 1px solid var(--border-gold);">Copy</button>
+            </div>
+            <p id="copyMsg" style="font-size: 0.75rem; color: var(--accent-green); display: none;">Link copied to clipboard!</p>
+        </div>
+
+        <!-- Log Out Trigger -->
+        <button onclick="handleLogout()" class="btn btn-secondary">Log Out</button>
+    </div>
+
+    <!-- Navigation Footer Bottom Bar -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button class="nav-item active" onclick="switchTab('tabHome', this)">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tabGame', this)">
+            <span class="nav-icon">🚀</span>
+            <span>Game</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tabWallet', this)">
+            <span class="nav-icon">💼</span>
+            <span>Wallet</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tabProfile', this)">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // Firebase initialization with provided configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDpxtndV-DBhw2cMLem4BfLzX2Z8k1RvA",
+      authDomain: "aviator-gold-game.firebaseapp.com",
+      databaseURL: "https://aviator-gold-game-default-rtdb.firebaseio.com",
+      projectId: "aviator-gold-game",
+      storageBucket: "aviator-gold-game.firebasestorage.app",
+      messagingSenderId: "480275652156",
+      appId: "1:480275652156:web:dcfc06e1eb1931c77bed39",
+      measurementId: "G-VQZVRNK0G8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // State Preservation
+    let loggedInUserPhone = "";
+    let userDetails = {
+        name: "",
+        phone: "",
+        password: "",
+        balance: 50.00, // 50 ETB Sign-up Bonus for new users
+        withdrawName: "",
+        withdrawAccount: "",
+        withdrawSaved: false,
+        hasWithdrawnToday: false // Prevents multiple daily withdrawals
+    };
+
+    let transactions = [];
+
+    // Realtime Sync Handlers
+    function listenToBalance(phone) {
+        database.ref('users/' + phone + '/balance').off();
+        database.ref('users/' + phone + '/balance').on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                userDetails.balance = parseFloat(snapshot.val());
+                updateBalanceUI();
+            }
+        });
+    }
+
+    // Listens to transaction node, processes and credits pending deposits automatically upon successful state
+    function listenToTransactions(phone) {
+        database.ref('users/' + phone + '/transactions').off();
+        database.ref('users/' + phone + '/transactions').on('value', (snapshot) => {
+            const data = snapshot.val();
+            transactions = [];
+            let updatedBalanceNeeded = false;
+            let currentBalance = userDetails.balance;
+
+            if (data) {
+                Object.entries(data).forEach(([key, tx]) => {
+                    // Detect deposit status change to successful that has not been credited yet
+                    if (tx.type === "deposit" && tx.status === "Successful" && tx.credited === false) {
+                        currentBalance += parseFloat(tx.amount);
+                        tx.credited = true;
+                        
+                        // Set transaction to credited state to avoid double crediting
+                        database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
+                        updatedBalanceNeeded = true;
+                        alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
+                    }
+                    
+                    tx.key = key; 
+                    transactions.unshift(tx); // Ensure newest transactions always appear on top
+                });
+            }
+
+            if (updatedBalanceNeeded) {
+                userDetails.balance = currentBalance;
+                database.ref('users/' + phone + '/balance').set(currentBalance);
+            }
+
+            renderHistory();
+            updateBalanceUI();
+        });
+    }
+
+    function syncUserBalance() {
+        if (!loggedInUserPhone) return;
+        database.ref('users/' + loggedInUserPhone + '/balance').set(userDetails.balance);
+        updateBalanceUI();
+    }
+
+    // Navigation controller
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        const isAuthScreen = (screenId === 'screenRegister' || screenId === 'screenLogin');
+        document.getElementById('appHeader').style.display = isAuthScreen ? 'none' : 'flex';
+        document.getElementById('bottomNav').style.display = isAuthScreen ? 'none' : 'flex';
+    }
+
+    function switchTab(tabId, element) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // Handles user registration with 50 ETB initial balance
+    function handleRegister(event) {
+        event.preventDefault();
+        const name = document.getElementById('regName').value;
+        const phone = document.getElementById('regPhone').value;
+        const password = document.getElementById('regPassword').value;
+
+        if (password.length !== 6) {
+            alert('Password must be exactly a 6-digit number.');
+            return;
+        }
+
+        database.ref('users/' + phone).once('value').then((snapshot) => {
+            if (snapshot.exists()) {
+                alert('An account with this phone number already exists!');
+            } else {
+                const newUser = {
+                    name: name,
+                    phone: phone,
+                    password: password,
+                    balance: 50.00,
+                    withdrawName: "",
+                    withdrawAccount: "",
+                    withdrawSaved: false,
+                    hasWithdrawnToday: false
+                };
+
+                database.ref('users/' + phone).set(newUser).then(() => {
+                    alert('Registration successful! You have received a 50 ETB Sign-up Bonus. You may now login.');
+                    document.getElementById('loginPhone').value = phone;
+                    showScreen('screenLogin');
+                }).catch((error) => {
+                    alert('Registration failed: ' + error.message);
+                });
+            }
+        });
+    }
+
+    // Handles authentication with active editable input matching real-time firebase profiles
+    function handleLogin(event) {
+        event.preventDefault();
+        const phone = document.getElementById('loginPhone').value;
+        const passwordInput = document.getElementById('loginPassword').value;
+
+        if (!phone) {
+            alert("Please input your registered phone number.");
+            return;
+        }
+
+        database.ref('users/' + phone).once('value').then((snapshot) => {
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                if (userData.password === passwordInput) {
+                    loggedInUserPhone = phone;
+                    userDetails = userData;
+
+                    document.getElementById('profName').innerText = userDetails.name;
+                    document.getElementById('profPhone').innerText = userDetails.phone;
+                    document.getElementById('refLink').value = `https://aviator-gold.com/register?ref=${userDetails.phone}`;
+                    
+                    // Activate real-time database listeners
+                    listenToBalance(phone);
+                    listenToTransactions(phone);
+
+                    // Check if withdrawal details are locked
+                    if (userDetails.withdrawSaved) {
+                        document.getElementById('withName').value = userDetails.withdrawName;
+                        document.getElementById('withAccount').value = userDetails.withdrawAccount;
+                        document.getElementById('withName').disabled = true;
+                        document.getElementById('withAccount').disabled = true;
+                        document.getElementById('btnSaveWithdraw').style.display = 'none';
+
+                        const banner = document.getElementById('withdrawSavedMsg');
+                        banner.innerText = `Saved Account: ${userDetails.withdrawName} (${userDetails.withdrawAccount}). Edits are restricted within the app.`;
+                        banner.style.display = 'block';
+
+                        document.getElementById('actualWithdrawSection').style.display = 'block';
+                    } else {
+                        document.getElementById('withName').value = "";
+                        document.getElementById('withAccount').value = "";
+                        document.getElementById('withName').disabled = false;
+                        document.getElementById('withAccount').disabled = false;
+                        document.getElementById('btnSaveWithdraw').style.display = 'block';
+                        document.getElementById('withdrawSavedMsg').style.display = 'none';
+                        document.getElementById('actualWithdrawSection').style.display = 'none';
+                    }
+
+                    showScreen('tabHome');
+                    const homeNavItem = document.querySelector('.nav-item');
+                    switchTab('tabHome', homeNavItem);
+                } else {
+                    alert('Incorrect password. Please try again.');
+                }
+            } else {
+                alert('No account found with this phone number. Please register first.');
+            }
+        }).catch((err) => {
+            alert('Database Connection Failed: ' + err.message);
+        });
+    }
+
+    function handleLogout() {
+        if (loggedInUserPhone) {
+            database.ref('users/' + loggedInUserPhone + '/balance').off();
+            database.ref('users/' + loggedInUserPhone + '/transactions').off();
+        }
+        loggedInUserPhone = "";
+        userDetails = {
+            name: "",
+            phone: "",
+            password: "",
+            balance: 50.00,
+            withdrawName: "",
+            withdrawAccount: "",
+            withdrawSaved: false,
+            hasWithdrawnToday: false
+        };
+        transactions = [];
+        document.getElementById('loginPassword').value = '';
+        renderHistory();
+        showScreen('screenLogin');
+    }
+
+    function updateBalanceUI() {
+        document.getElementById('userBalance').innerText = userDetails.balance.toFixed(2);
+    }
+
+    // Wallet transaction switcher
+    function switchWalletTab(type) {
+        document.getElementById('btnTabDep').classList.remove('active');
+        document.getElementById('btnTabWith').classList.remove('active');
+        document.getElementById('sectionDeposit').classList.remove('active');
+        document.getElementById('sectionWithdraw').classList.remove('active');
+
+        if (type === 'deposit') {
+            document.getElementById('btnTabDep').classList.add('active');
+            document.getElementById('sectionDeposit').classList.add('active');
+        } else {
+            document.getElementById('btnTabWith').classList.add('active');
+            document.getElementById('sectionWithdraw').classList.add('active');
+        }
+    }
+
+    // Submits deposit to pending log node on Firebase RTDB waiting for external manual action
+    function handleDepositSubmit(event) {
+        event.preventDefault();
+        const depAmount = parseFloat(document.getElementById('depAmount').value);
+        const ftVal = document.getElementById('depFT').value;
+        
+        if (isNaN(depAmount) || depAmount <= 0) {
+            alert("Please enter a valid deposit amount.");
+            return;
+        }
+
+        const date = new Date();
+        const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+
+        const newDepositTx = {
+            type: "deposit",
+            desc: "Deposit (FT: " + ftVal + ")",
+            amount: depAmount,
+            status: "Pending", // Stays pending until external app sets this field to "Successful"
+            credited: false,
+            time: formattedDate,
+            icon: "⏱️"
+        };
+
+        if (loggedInUserPhone) {
+            database.ref('users/' + loggedInUserPhone + '/transactions').push(newDepositTx).then(() => {
+                alert(`Your deposit request of ${depAmount} ETB has been submitted. It will remain Pending until approved.`);
+                
+                document.getElementById('depAmount').value = "";
+                document.getElementById('depFT').value = "";
+                document.getElementById('depImage').value = "";
+            }).catch((error) => {
+                alert("Failed to submit deposit: " + error.message);
+            });
+        } else {
+            alert("Please login first.");
+        }
+    }
+
+    // Secure Bank profile save
+    function handleWithdrawSave(event) {
+        event.preventDefault();
+        const withName = document.getElementById('withName').value;
+        const withAccount = document.getElementById('withAccount').value;
+
+        userDetails.withdrawName = withName;
+        userDetails.withdrawAccount = withAccount;
+        userDetails.withdrawSaved = true;
+
+        document.getElementById('withName').disabled = true;
+        document.getElementById('withAccount').disabled = true;
+        document.getElementById('btnSaveWithdraw').style.display = 'none';
+
+        const banner = document.getElementById('withdrawSavedMsg');
+        banner.innerText = `Saved Account: ${withName} (${withAccount}). Edits are restricted within the app.`;
+        banner.style.display = 'block';
+
+        document.getElementById('actualWithdrawSection').style.display = 'block';
+
+        if (loggedInUserPhone) {
+            database.ref('users/' + loggedInUserPhone).update({
+                withdrawName: withName,
+                withdrawAccount: withAccount,
+                withdrawSaved: true
+            });
+        }
+    }
+
+    // Withdrawal process with strict 1x daily limit and 200 - 5000 ETB range
+    function requestWithdrawal() {
+        if (userDetails.hasWithdrawnToday) {
+            alert("Limit reached: You are allowed only 1 withdrawal request per day.");
+            return;
+        }
+
+        const amount = parseFloat(document.getElementById('withAmount').value);
+        if (isNaN(amount)) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        if (amount < 200 || amount > 5000) {
+            alert("Transaction Denied: Withdrawal must be between 200 ETB and 5000 ETB.");
+            return;
+        }
+
+        if (amount > userDetails.balance) {
+            alert("Insufficient funds in your account.");
+            return;
+        }
+
+        userDetails.balance -= amount;
+        userDetails.hasWithdrawnToday = true; 
+        
+        const date = new Date();
+        const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+
+        const newWithdrawTx = {
+            type: "withdrawal",
+            desc: "Withdrawal (CBE/Telebirr)",
+            amount: -amount,
+            status: "Pending", // Withdrawal starts as pending waiting for external processing
+            time: formattedDate,
+            icon: "💸"
+        };
+
+        if (loggedInUserPhone) {
+            database.ref('users/' + loggedInUserPhone).update({
+                balance: userDetails.balance,
+                hasWithdrawnToday: true
+            }).then(() => {
+                database.ref('users/' + loggedInUserPhone + '/transactions').push(newWithdrawTx);
+                alert(`Withdrawal request of ${amount} ETB has been submitted and is currently Pending.`);
+                document.getElementById('withAmount').value = "";
+            });
+        }
+    }
+
+    // Renders history list with pending and successful transaction status colors
+    function renderHistory() {
+        const container = document.getElementById('transactionList');
+        if (transactions.length === 0) {
+            container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">No logs recorded.</p>`;
+            return;
+        }
+
+        container.innerHTML = transactions.map(item => {
+            let statusBadge = "";
+            if (item.status) {
+                const badgeColor = item.status === "Successful" ? "var(--accent-green)" : "#e67e22";
+                statusBadge = `<span style="font-size: 0.7rem; color: ${badgeColor}; font-weight: bold; border: 1px solid ${badgeColor}; padding: 1px 4px; border-radius: 4px; margin-left: 5px;">${item.status}</span>`;
+            }
+
+            const isNegative = typeof item.amount === 'number' ? item.amount < 0 : String(item.amount).startsWith('-');
+            const displayAmount = typeof item.amount === 'number' ? Math.abs(item.amount).toFixed(2) : parseFloat(String(item.amount).replace(/[^0-9.]/g, '')).toFixed(2);
+            const amountPrefix = isNegative ? "-" : "+";
+            const amountColor = isNegative ? "#ff4757" : "var(--accent-green)";
+
+            return `
+                <div class="transaction-item">
+                    <div>
+                        <span>${item.icon} <strong>${item.desc}</strong> ${statusBadge}</span><br>
+                        <span style="font-size:0.7rem; color:var(--text-muted);">${item.time}</span>
+                    </div>
+                    <div style="font-weight:bold; display: flex; align-items: center; color: ${amountColor};">
+                        ${amountPrefix}${displayAmount} ETB
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Copy Invite Links
+    function copyRefLink() {
+        const input = document.getElementById('refLink');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value);
+
+        const msg = document.getElementById('copyMsg');
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 2000);
+    }
+
+    // ==========================================
+    // REAL-TIME EXPONENTIAL AVIATOR CALCULATOR
+    // ==========================================
+    let isPlaying = false;
+    let isCrashed = false;
+    let isCashedOut = false;
+    let isCountingDown = false;
+    let liveMultiplier = 1.00;
+    let gameInterval = null;
+    let crashPoint = 1.00;
+    let currentBetAmount = 0;
+
+    function handleGameAction() {
+        const btn = document.getElementById('gameActionBtn');
+        const betInput = document.getElementById('betAmount');
+
+        if (!isPlaying && !isCountingDown) {
+            // Verify Stake
+            currentBetAmount = parseFloat(betInput.value);
+            if (isNaN(currentBetAmount) || currentBetAmount <= 0) {
+                alert("Please enter a valid bet amount!");
+                return;
+            }
+            if (currentBetAmount > userDetails.balance) {
+                alert("Insufficient funds to place this bet!");
+                return;
+            }
+
+            // Deduct Stake
+            userDetails.balance -= currentBetAmount;
+            syncUserBalance();
+
+            // Set state to Countdown Phase
+            isCountingDown = true;
+            betInput.disabled = true;
+            document.getElementById('crashMessage').style.display = 'none';
+            document.getElementById('liveMultiplier').style.color = varColor('--primary-gold');
+
+            // 3-Second Preparation Countdown
+            let countdownValue = 3;
+            btn.innerHTML = `BET PLACED`;
+            btn.disabled = true;
+            btn.style.background = '#faf8f5';
+            btn.style.color = varColor('--text-muted');
+
+            let countdownInterval = setInterval(() => {
+                document.getElementById('liveMultiplier').innerText = `Starting in ${countdownValue}...`;
+                countdownValue--;
+
+                if (countdownValue < 0) {
+                    clearInterval(countdownInterval);
+                    isCountingDown = false;
+                    startFlight();
+                }
+            }, 1000);
+        } else if (isPlaying && !isCashedOut) {
+            // User Exits (WINS)
+            isCashedOut = true;
+            const wonAmount = currentBetAmount * liveMultiplier;
+            userDetails.balance += wonAmount;
+            syncUserBalance();
+
+            btn.innerHTML = `WON +${wonAmount.toFixed(2)} ETB`;
+            btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+            btn.style.color = 'white';
+            document.getElementById('liveMultiplier').style.color = varColor('--accent-green');
+
+            const date = new Date();
+            const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+
+            const winTx = {
+                type: "win",
+                desc: `Aviator Won @ ${liveMultiplier.toFixed(2)}x`,
+                amount: wonAmount,
+                status: "Successful",
+                time: formattedDate,
+                icon: "📈"
+            };
+
+            if (loggedInUserPhone) {
+                database.ref('users/' + loggedInUserPhone + '/transactions').push(winTx);
+            }
+            addHistoryBadge(liveMultiplier.toFixed(2) + "x");
+        }
+    }
+
+    function startFlight() {
+        isPlaying = true;
+        isCrashed = false;
+        isCashedOut = false;
+        liveMultiplier = 1.00;
+
+        const btn = document.getElementById('gameActionBtn');
+        btn.disabled = false;
+        btn.style.background = 'linear-gradient(135deg, #ff4757, #ff6b81)';
+        btn.style.color = 'white';
+        // Live winnings designed to render in bold and high-contrast glowing green on a dedicated line
+        btn.innerHTML = `CASH OUT <br><span style="font-size:1.1rem; color:#2ecc71; font-weight:800; display:block; margin-top:4px; text-shadow:0 0 10px rgba(46,204,113,0.5);" id="liveWinnings">${currentBetAmount.toFixed(2)} ETB</span>`;
+
+        // Mathematical Exponential Random Crash Point Generator
+        const r = Math.random();
+        if (r < 0.12) {
+            crashPoint = 1.00; // Immediate early crash (12% chance)
+        } else if (r < 0.6) {
+            crashPoint = 1.01 + (Math.random() * 1.5); // 1.01x to 2.51x
+        } else if (r < 0.92) {
+            crashPoint = 2.50 + (Math.random() * 5.0); // 2.50x to 7.50x
+        } else {
+            crashPoint = 7.50 + (Math.random() * 20.0); // 7.50x to 27.50x
+        }
+
+        document.getElementById('plane').style.display = 'block';
+        document.getElementById('plane').style.transform = 'translate(0px, 0px)';
+
+        let startTime = Date.now();
+        
+        // Exact Exponential growth cycle: Multiplier = 1.00 * (1.12 ^ elapsed)
+        gameInterval = setInterval(() => {
+            let elapsed = (Date.now() - startTime) / 1000; // in seconds
+            
+            // True Aviator exponential growth curve calculation
+            liveMultiplier = parseFloat((1.00 * Math.pow(1.12, elapsed)).toFixed(2));
+            
+            document.getElementById('liveMultiplier').innerText = liveMultiplier.toFixed(2) + "x";
+            
+            if (!isCashedOut) {
+                const currentWin = currentBetAmount * liveMultiplier;
+                const winningsEl = document.getElementById('liveWinnings');
+                if (winningsEl) {
+                    winningsEl.innerText = currentWin.toFixed(2) + " ETB";
+                }
+            }
+
+            // Animate SVG Plane along diagonal path
+            const plane = document.getElementById('plane');
+            const xPos = Math.min(elapsed * 28, 260);
+            const yPos = -Math.min(elapsed * 16, 120);
+            plane.style.transform = `translate(${xPos}px, ${yPos}px)`;
+
+            // Trigger Crash Event
+            if (liveMultiplier >= crashPoint) {
+                triggerCrash();
+            }
+
+        }, 50); // Frequent smooth updates (50ms cycles)
+    }
+
+    function triggerCrash() {
+        clearInterval(gameInterval);
+        isCrashed = true;
+        isPlaying = false;
+        
+        document.getElementById('plane').style.display = 'none';
+        const msg = document.getElementById('crashMessage');
+        msg.innerText = `FLEW AWAY @ ${liveMultiplier.toFixed(2)}x`;
+        msg.style.display = 'block';
+
+        document.getElementById('liveMultiplier').innerText = liveMultiplier.toFixed(2) + "x";
+        document.getElementById('liveMultiplier').style.color = '#ff4757';
+
+        const btn = document.getElementById('gameActionBtn');
+        btn.innerHTML = `BET`;
+        btn.disabled = false;
+        btn.style.background = 'linear-gradient(135deg, var(--accent-gold), var(--primary-gold))';
+        btn.style.color = '#ffffff';
+        document.getElementById('betAmount').disabled = false;
+
+        if (!isCashedOut) {
+            const date = new Date();
+            const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+
+            const lossTx = {
+                type: "loss",
+                desc: `Aviator Crashed @ ${liveMultiplier.toFixed(2)}x`,
+                amount: -currentBetAmount,
+                status: "Successful",
+                time: formattedDate,
+                icon: "📉"
+            };
+
+            if (loggedInUserPhone) {
+                database.ref('users/' + loggedInUserPhone + '/transactions').push(lossTx);
+            }
+            addHistoryBadge(liveMultiplier.toFixed(2) + "x");
+        }
+    }
+
+    function addHistoryBadge(multText) {
+        const historyContainer = document.getElementById('multiplierHistory');
+        const badge = document.createElement('span');
+        badge.className = 'history-badge';
+        badge.innerText = multText;
+        
+        historyContainer.insertBefore(badge, historyContainer.firstChild);
+        
+        if (historyContainer.children.length > 5) {
+            historyContainer.removeChild(historyContainer.lastChild);
+        }
+    }
+
+    function varColor(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+</script>
+
+</body>
+</html>
