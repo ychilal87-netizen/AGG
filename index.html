@@ -356,6 +356,11 @@
                 <label for="regPassword">6-Digit Password</label>
                 <input type="password" id="regPassword" class="form-control" placeholder="******" maxlength="6" pattern="\d{6}" title="Password must be exactly a 6-digit number" required>
             </div>
+            <!-- Dynamic 6-digit Referral input field as requested -->
+            <div class="form-group">
+                <label for="regReferral">Referral Code (6-Digit - Optional)</label>
+                <input type="text" id="regReferral" class="form-control" placeholder="6-digit code" maxlength="6" pattern="\d{6}">
+            </div>
             <button type="submit" class="btn">Register</button>
         </form>
         <p style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">
@@ -372,7 +377,6 @@
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label for="loginPhone">Phone Number</label>
-                <!-- Fully functional editable login phone input as requested -->
                 <input type="tel" id="loginPhone" class="form-control" placeholder="09xxxxxxxx" required pattern="^(09|07)\d{8}$" title="Please enter a valid Ethiopian phone number">
             </div>
             <div class="form-group">
@@ -464,7 +468,6 @@
             </div>
 
             <form onsubmit="handleDepositSubmit(event)">
-                <!-- Amount input added so we can record exact sum for admin approval -->
                 <div class="form-group">
                     <label for="depAmount">Deposit Amount (ETB)</label>
                     <input type="number" id="depAmount" class="form-control" placeholder="Enter deposited amount" min="1" required>
@@ -529,17 +532,25 @@
             <p id="profPhone" style="font-size: 0.85rem; color: var(--text-muted);">09xxxxxxxx</p>
         </div>
 
-        <!-- Referral Information Card -->
+        <!-- Referral Link Generator Panel -->
         <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
             <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 5px;">Invite Friends & Earn</h4>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
-                Share your referral link with your network. When your referred user registers and completes a deposit, an <strong>8% commission</strong> is automatically credited to your balance.
+                Share your referral link. When your referred user registers and completes a deposit, an <strong>8% commission</strong> is automatically credited to your balance.
             </p>
             <div class="form-group" style="display: flex; gap: 5px; margin-bottom: 8px;">
                 <input type="text" id="refLink" class="form-control" readonly value="https://aviator-gold.com/register?ref=12345" style="font-size: 0.8rem; background-color: #ffffff;">
                 <button onclick="copyRefLink()" class="btn" style="width: auto; padding: 0 15px; font-size: 0.85rem; background: #faf8f5; color: var(--primary-gold); border: 1px solid var(--border-gold);">Copy</button>
             </div>
             <p id="copyMsg" style="font-size: 0.75rem; color: var(--accent-green); display: none;">Link copied to clipboard!</p>
+        </div>
+
+        <!-- Referred Users List as requested with Name and ID -->
+        <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
+            <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 8px;">Referred Users</h4>
+            <div id="referredUsersList" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem; color: var(--text-dark);">
+                <p style="text-align: center; color: var(--text-muted);">No referred users yet.</p>
+            </div>
         </div>
 
         <!-- Log Out Trigger -->
@@ -594,10 +605,23 @@
         withdrawName: "",
         withdrawAccount: "",
         withdrawSaved: false,
-        hasWithdrawnToday: false // Prevents multiple daily withdrawals
+        hasWithdrawnToday: false,
+        referredBy: ""
     };
 
     let transactions = [];
+
+    // Auto load referral code from URL parameter on DOM load
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        if (refCode && refCode.length === 6) {
+            const refInput = document.getElementById('regReferral');
+            if (refInput) {
+                refInput.value = refCode;
+            }
+        }
+    });
 
     // Realtime Sync Handlers
     function listenToBalance(phone) {
@@ -611,6 +635,7 @@
     }
 
     // Listens to transaction node, processes and credits pending deposits automatically upon successful state
+    // Also fires the 8% commission to the referrer automatically on deposit approval
     function listenToTransactions(phone) {
         database.ref('users/' + phone + '/transactions').off();
         database.ref('users/' + phone + '/transactions').on('value', (snapshot) => {
@@ -629,6 +654,29 @@
                         // Set transaction to credited state to avoid double crediting
                         database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
                         updatedBalanceNeeded = true;
+                        
+                        // Continuous Referral Commission Logic - Adds 8% of approved deposit to referrer balance
+                        if (userDetails.referredBy) {
+                            const commission = parseFloat(tx.amount) * 0.08;
+                            const date = new Date();
+                            const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+                            
+                            // Multi-user concurrency safe transaction to securely adjust referrer balance
+                            database.ref('users/' + userDetails.referredBy + '/balance').transaction((bal) => {
+                                return (bal || 0) + commission;
+                            });
+
+                            // Logs commission transaction history under referrer's profile
+                            database.ref('users/' + userDetails.referredBy + '/transactions').push({
+                                type: "referral_commission",
+                                desc: `Referral Commission (From ID: ${userDetails.phone})`,
+                                amount: commission,
+                                status: "Successful",
+                                time: formattedDate,
+                                icon: "🎁"
+                            });
+                        }
+
                         alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
                     }
                     
@@ -644,6 +692,25 @@
 
             renderHistory();
             updateBalanceUI();
+        });
+    }
+
+    // Listens to referred users list under logged in user's node in real-time
+    function listenToReferredUsers(phone) {
+        database.ref('users/' + phone + '/referredUsers').off();
+        database.ref('users/' + phone + '/referredUsers').on('value', (snapshot) => {
+            const listEl = document.getElementById('referredUsersList');
+            if (snapshot.exists()) {
+                const users = snapshot.val();
+                listEl.innerHTML = Object.values(users).map(u => `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1edd9; padding: 6px 0;">
+                        <span>👤 <strong>${u.name}</strong></span>
+                        <span style="color: var(--text-muted);">ID: ${u.phone}</span>
+                    </div>
+                `).join('');
+            } else {
+                listEl.innerHTML = `<p style="text-align: center; color: var(--text-muted);">No referred users yet.</p>`;
+            }
         });
     }
 
@@ -671,12 +738,13 @@
         element.classList.add('active');
     }
 
-    // Handles user registration with 50 ETB initial balance
+    // Handles user registration with 50 ETB initial balance and robust 6-digit referral processing
     function handleRegister(event) {
         event.preventDefault();
         const name = document.getElementById('regName').value;
         const phone = document.getElementById('regPhone').value;
         const password = document.getElementById('regPassword').value;
+        const refCode = document.getElementById('regReferral').value;
 
         if (password.length !== 6) {
             alert('Password must be exactly a 6-digit number.');
@@ -695,16 +763,57 @@
                     withdrawName: "",
                     withdrawAccount: "",
                     withdrawSaved: false,
-                    hasWithdrawnToday: false
+                    hasWithdrawnToday: false,
+                    referredBy: ""
                 };
 
-                database.ref('users/' + phone).set(newUser).then(() => {
-                    alert('Registration successful! You have received a 50 ETB Sign-up Bonus. You may now login.');
-                    document.getElementById('loginPhone').value = phone;
-                    showScreen('screenLogin');
-                }).catch((error) => {
-                    alert('Registration failed: ' + error.message);
-                });
+                // Internal execution to write files to DB
+                const executeRegistration = (referrerPhone = "") => {
+                    newUser.referredBy = referrerPhone;
+                    
+                    database.ref('users/' + phone).set(newUser).then(() => {
+                        // Map the newly registered user's 6-digit referral code
+                        const myRefCode = phone.slice(-6);
+                        database.ref('refCodes/' + myRefCode).set(phone);
+
+                        // If user registered with a code, record metadata under referrer
+                        if (referrerPhone) {
+                            database.ref('users/' + referrerPhone + '/referredUsers/' + phone).set({
+                                name: name,
+                                phone: phone,
+                                registeredAt: new Date().toLocaleDateString()
+                            });
+                        }
+
+                        alert('Registration successful! You have received a 50 ETB Sign-up Bonus. You may now login.');
+                        document.getElementById('loginPhone').value = phone;
+                        showScreen('screenLogin');
+                    }).catch((error) => {
+                        alert('Registration failed: ' + error.message);
+                    });
+                };
+
+                // Check and resolve the referrer phone number using the 6-digit code map
+                if (refCode) {
+                    if (refCode.length !== 6) {
+                        alert('Referral Code must be exactly 6 digits.');
+                        return;
+                    }
+                    database.ref('refCodes/' + refCode).once('value').then((refSnap) => {
+                        if (refSnap.exists()) {
+                            const referrerPhone = refSnap.val();
+                            if (referrerPhone === phone) {
+                                alert("You cannot use your own referral code.");
+                                return;
+                            }
+                            executeRegistration(referrerPhone);
+                        } else {
+                            alert('Invalid Referral Code! Clear the field if you do not have one.');
+                        }
+                    });
+                } else {
+                    executeRegistration("");
+                }
             }
         });
     }
@@ -729,11 +838,13 @@
 
                     document.getElementById('profName').innerText = userDetails.name;
                     document.getElementById('profPhone').innerText = userDetails.phone;
-                    document.getElementById('refLink').value = `https://aviator-gold.com/register?ref=${userDetails.phone}`;
+                    // Referral link output displays the 6-digit referral code derived from user phone
+                    document.getElementById('refLink').value = `https://aviator-gold.com/register?ref=${userDetails.phone.slice(-6)}`;
                     
                     // Activate real-time database listeners
                     listenToBalance(phone);
                     listenToTransactions(phone);
+                    listenToReferredUsers(phone);
 
                     // Check if withdrawal details are locked
                     if (userDetails.withdrawSaved) {
@@ -776,6 +887,7 @@
         if (loggedInUserPhone) {
             database.ref('users/' + loggedInUserPhone + '/balance').off();
             database.ref('users/' + loggedInUserPhone + '/transactions').off();
+            database.ref('users/' + loggedInUserPhone + '/referredUsers').off();
         }
         loggedInUserPhone = "";
         userDetails = {
@@ -786,7 +898,8 @@
             withdrawName: "",
             withdrawAccount: "",
             withdrawSaved: false,
-            hasWithdrawnToday: false
+            hasWithdrawnToday: false,
+            referredBy: ""
         };
         transactions = [];
         document.getElementById('loginPassword').value = '';
