@@ -356,10 +356,10 @@
                 <label for="regPassword">6-Digit Password</label>
                 <input type="password" id="regPassword" class="form-control" placeholder="******" maxlength="6" pattern="\d{6}" title="Password must be exactly a 6-digit number" required>
             </div>
-            <!-- Dynamic 6-digit Referral input field as requested -->
+            <!-- Dynamic 6-digit Referral input field (Mandatory/Required) as requested -->
             <div class="form-group">
-                <label for="regReferral">Referral Code (6-Digit - Optional)</label>
-                <input type="text" id="regReferral" class="form-control" placeholder="6-digit code" maxlength="6" pattern="\d{6}">
+                <label for="regReferral">Referral Code (6-Digit)</label>
+                <input type="text" id="regReferral" class="form-control" placeholder="6-digit code" maxlength="6" pattern="\d{6}" required>
             </div>
             <button type="submit" class="btn">Register</button>
         </form>
@@ -532,7 +532,7 @@
             <p id="profPhone" style="font-size: 0.85rem; color: var(--text-muted);">09xxxxxxxx</p>
         </div>
 
-        <!-- Referral Link Generator Panel with 100% functional dynamic base URLs -->
+        <!-- Referral Link Generator Panel -->
         <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
             <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 5px;">Invite Friends & Earn</h4>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
@@ -793,7 +793,7 @@
                     });
                 };
 
-                // Check and resolve the referrer phone number using the 6-digit code map
+                // Check and resolve the referrer phone number using the mandatory 6-digit code map
                 if (refCode) {
                     if (refCode.length !== 6) {
                         alert('Referral Code must be exactly 6 digits.');
@@ -808,11 +808,11 @@
                             }
                             executeRegistration(referrerPhone);
                         } else {
-                            alert('Invalid Referral Code! Clear the field if you do not have one.');
+                            alert('Invalid Referral Code! You must enter a valid 6-digit referral code to register.');
                         }
                     });
                 } else {
-                    executeRegistration("");
+                    alert('Referral Code is required to register.');
                 }
             }
         });
