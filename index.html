@@ -611,14 +611,17 @@
 
     let transactions = [];
 
-    // Auto load referral code from URL parameter on DOM load
+    // Auto load referral code from URL parameter on DOM load. 
+    // If none exists, pre-fills with system default "123456" as requested.
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const refCode = urlParams.get('ref');
-        if (refCode && refCode.length === 6) {
-            const refInput = document.getElementById('regReferral');
-            if (refInput) {
+        const refInput = document.getElementById('regReferral');
+        if (refInput) {
+            if (refCode && refCode.length === 6) {
                 refInput.value = refCode;
+            } else {
+                refInput.value = "123456"; // Default system referral code
             }
         }
     });
@@ -807,6 +810,9 @@
                                 return;
                             }
                             executeRegistration(referrerPhone);
+                        } else if (refCode === "123456") {
+                            // System default code bypass allowed if DB refCodes doesn't exist yet
+                            executeRegistration("");
                         } else {
                             alert('Invalid Referral Code! You must enter a valid 6-digit referral code to register.');
                         }
