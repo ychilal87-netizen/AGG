@@ -532,7 +532,7 @@
             <p id="profPhone" style="font-size: 0.85rem; color: var(--text-muted);">09xxxxxxxx</p>
         </div>
 
-        <!-- Referral Link Generator Panel -->
+        <!-- Referral Link Generator Panel with 100% functional dynamic base URLs -->
         <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
             <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 5px;">Invite Friends & Earn</h4>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
@@ -838,8 +838,10 @@
 
                     document.getElementById('profName').innerText = userDetails.name;
                     document.getElementById('profPhone').innerText = userDetails.phone;
-                    // Referral link output displays the 6-digit referral code derived from user phone
-                    document.getElementById('refLink').value = `https://aviator-gold.com/register?ref=${userDetails.phone.slice(-6)}`;
+                    
+                    // Dynamic referral link generation using the absolute dynamic page base URL to ensure 100% functionality
+                    const baseUrl = window.location.href.split('?')[0];
+                    document.getElementById('refLink').value = `${baseUrl}?ref=${userDetails.phone.slice(-6)}`;
                     
                     // Activate real-time database listeners
                     listenToBalance(phone);
