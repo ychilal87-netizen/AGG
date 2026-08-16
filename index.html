@@ -158,29 +158,56 @@
             border: 1px solid var(--border-gold);
         }
 
-        /* Custom SVG Plane Icon and Flying Arena */
+        /* High-Quality Sci-Fi Fighter Jet Sunset Sky Arena CSS */
         .game-arena {
-            background: linear-gradient(180deg, #fdfdfa 0%, #f7f3e6 100%);
+            background: linear-gradient(180deg, #050b14 0%, #111a30 50%, #1e152a 75%, #ff5e3a 100%);
             border-radius: 12px;
             height: 220px;
             position: relative;
             overflow: hidden;
-            border: 2px solid var(--border-gold);
+            border: 2px solid #ff7a00;
             margin-bottom: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 15px rgba(255, 94, 58, 0.2);
+        }
+
+        /* Dynamic night sky stars and cockpit grid overlays */
+        .game-arena::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 100px 100px, 120px 120px, 150px 150px;
+            background-position: 0 0, 40px 60px, 130px 20px;
+            opacity: 0.4;
+            z-index: 1;
+        }
+
+        .game-arena::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, rgba(86, 204, 242, 0.04) 0px, rgba(86, 204, 242, 0.04) 1px, transparent 1px, transparent 20px),
+                        repeating-linear-gradient(90deg, rgba(86, 204, 242, 0.04) 0px, rgba(86, 204, 242, 0.04) 1px, transparent 1px, transparent 20px);
+            z-index: 2;
+            pointer-events: none;
         }
 
         .multiplier-text {
             font-size: 3.2rem;
             font-weight: 800;
-            color: var(--primary-gold);
+            color: #56ccf2;
             z-index: 5;
-            text-shadow: 0 1px 4px rgba(179, 139, 29, 0.2);
+            text-shadow: 0 0 15px rgba(86, 204, 242, 0.6);
+            transition: opacity 0.15s ease-out;
         }
 
-        /* High Quality Glowing Vector Plane Styling */
+        /* High Quality Glowing Fighter Jet (F-22 Raptor Inspired) Styling */
         .plane-wrapper {
             position: absolute;
             bottom: 20px;
@@ -195,8 +222,9 @@
         .plane-svg {
             width: 100%;
             height: 100%;
-            fill: var(--primary-gold);
-            filter: drop-shadow(0 2px 4px rgba(179, 139, 29, 0.3));
+            fill: #56ccf2;
+            filter: drop-shadow(0 0 8px #56ccf2);
+            transform: rotate(45deg);
         }
 
         /* Multiplier History badges */
@@ -332,8 +360,8 @@
 
 <div class="phone-container">
 
-    <!-- ================= FLOATING TELEGRAM SERVICE BUTTON ================= -->
-    <!-- Green background, female support representative icon, draggable, links to https://t.me/AGGservice -->
+    <!-- ================= FLOATING TELEGRAM CUSTOMER SUPPORT BUTTON ================= -->
+    <!-- Green background, official look, draggable, links to support service handle (Not the channel) -->
     <a href="https://t.me/AGGservice" target="_blank" id="floatingService" style="
         display: none; 
         position: absolute; 
@@ -344,9 +372,10 @@
         text-decoration: none; 
         padding: 10px 16px; 
         border-radius: 50px; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.25); 
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); 
         z-index: 1001; 
         font-weight: bold; 
+        display: flex;
         align-items: center; 
         gap: 8px; 
         font-size: 0.85rem;
@@ -354,8 +383,12 @@
         cursor: grab;
         user-select: none;
         touch-action: none;
+        transition: transform 0.2s;
     ">
-        <span style="font-size: 1.1rem;">👩‍💼</span>
+        <!-- Modern live support headset SVG icon -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
         <span>SERVICE</span>
     </a>
 
@@ -427,6 +460,29 @@
             Aviator is a modern crash game where you can multiply your stake rapidly based on your exit timing.
         </div>
 
+        <!-- Static Green Telegram Channel Button on Home screen -->
+        <a href="https://t.me/aviatorgamingchannel" target="_blank" style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: #27ae60;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+            font-size: 0.95rem;
+        ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            <span>JOIN AVIATOR GAMING CHANNEL</span>
+        </a>
+
         <h4 style="margin: 15px 0 10px 0; color: var(--primary-gold);">How It Works</h4>
         <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text-dark); display: flex; flex-direction: column; gap: 10px;">
             <p><strong>1. Place a Stake:</strong> Input your preferred amount before the round begins.</p>
@@ -454,21 +510,29 @@
         <div class="game-arena" id="arena">
             <div class="multiplier-text" id="liveMultiplier">1.00x</div>
             
-            <!-- Highly Stylized Aircraft Vector SVG -->
+            <!-- Dynamic Trajectory Curve Path SVG -->
+            <svg id="trajectorySvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3;">
+                <path id="trajectoryPath" d="" fill="none" stroke="#56ccf2" stroke-width="3" stroke-dasharray="4" style="filter: drop-shadow(0 0 6px #56ccf2); opacity: 0.8;"/>
+            </svg>
+
+            <!-- Highly Stylized Supersonic Combat Jet Vector SVG -->
             <div class="plane-wrapper" id="plane">
                 <svg class="plane-svg" viewBox="0 0 24 24">
-                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                    <path d="M12,2L14.5,9H21L16,13L18,20L12,16L6,20L8,13L3,9H9.5L12,2Z" fill="#56ccf2" style="filter: drop-shadow(0 0 8px #56ccf2);"/>
                 </svg>
             </div>
             
-            <div id="crashMessage" style="position: absolute; color: #ff4757; font-weight: bold; font-size: 1.1rem; display: none; text-shadow: 0 1px 3px rgba(0,0,0,0.15);">FLEW AWAY!</div>
+            <div id="crashMessage" style="position: absolute; color: #ff4757; font-weight: 900; font-size: 1.6rem; display: none; text-shadow: 0 0 15px rgba(255, 71, 87, 0.8); z-index: 6; letter-spacing: 1px;">FLEW AWAY!</div>
         </div>
 
-        <!-- Betting Inputs -->
+        <!-- Betting Inputs (Min: 4 ETB, Max: 4000 ETB) -->
         <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold);">
             <div class="form-group" style="margin-bottom: 10px;">
-                <label for="betAmount">Stake Amount (ETB)</label>
-                <input type="number" id="betAmount" class="form-control" value="10" min="5">
+                <div style="display: flex; justify-content: space-between;">
+                    <label for="betAmount">Stake Amount (ETB)</label>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold;">Min: 4 | Max: 4000</span>
+                </div>
+                <input type="number" id="betAmount" class="form-control" value="10" min="4" max="4000">
             </div>
             
             <button id="gameActionBtn" class="btn" style="height: 50px; font-size: 1.1rem;" onclick="handleGameAction()">BET</button>
@@ -489,10 +553,17 @@
                 Please deposit funds into the banking account details listed below. Once transferred, submit the <strong>Deposited Amount</strong>, <strong>FT (Reference) Number</strong> along with a screenshot of your transaction slip.
             </div>
 
-            <div style="background-color: #faf8f5; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-gold);">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">Payment Channel Details</p>
-                <p style="font-size: 1.1rem; font-weight: bold; color: var(--text-dark); margin-top: 3px;">0937813516 (Abreham)</p>
-                <p style="font-size: 0.80rem; color: var(--primary-gold); font-weight: bold;">CBE / Telebirr Available</p>
+            <!-- Highly accessible and styled copyable Telebirr account section -->
+            <div style="background-color: #faf8f5; padding: 14px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-gold); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Payment Wallet (Telebirr)</p>
+                    <p id="telebirrNum" style="font-size: 1.15rem; font-weight: 800; color: var(--text-dark); margin-top: 3px; letter-spacing: 0.5px;">0937813516</p>
+                    <p style="font-size: 0.75rem; color: var(--primary-gold); font-weight: bold; margin-top: 2px;">Abreham</p>
+                </div>
+                <button onclick="copyTelebirr()" type="button" class="btn" style="width: auto; padding: 8px 16px; font-size: 0.85rem; height: auto; border-radius: 6px; box-shadow: 0 2px 4px rgba(179,139,29,0.15);">Copy</button>
+            </div>
+            <div id="telebirrCopyMsg" style="font-size: 0.8rem; color: var(--accent-green); margin-top: -6px; margin-bottom: 14px; display: none; font-weight: bold; text-align: left; padding-left: 5px;">
+                ✓ Account number copied successfully!
             </div>
 
             <form onsubmit="handleDepositSubmit(event)">
@@ -613,7 +684,7 @@
     // Global Error Logger for troubleshooting on devices
     window.onerror = function(message, source, lineno, colno, error) {
         console.error("System Error caught:", message, "at", source, "line:", lineno);
-        alert("System Error Alert: " + message + " at line " + lineno); // <--- Added real-time error alert for immediate diagnosis
+        alert("System Error Alert: " + message + " at line " + lineno);
         return false;
     };
 
@@ -649,9 +720,158 @@
     let transactions = [];
 
     // =========================================================================
+    // ROBUST WEB AUDIO API SOUND GENERATOR SYSTEM
+    // =========================================================================
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let flightOscillator = null;
+    let flightGainNode = null;
+
+    function initAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+
+    function playFlightStartSound() {
+        try {
+            initAudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.25);
+            
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        } catch (e) {
+            console.error("Audio Start error:", e);
+        }
+    }
+
+    function startJetEngineSound() {
+        try {
+            initAudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            flightOscillator = audioCtx.createOscillator();
+            flightGainNode = audioCtx.createGain();
+            
+            flightOscillator.type = 'sawtooth';
+            flightOscillator.frequency.setValueAtTime(55, audioCtx.currentTime); // Deep hum
+            
+            let bandpassFilter = audioCtx.createBiquadFilter();
+            bandpassFilter.type = 'lowpass';
+            bandpassFilter.frequency.setValueAtTime(140, audioCtx.currentTime);
+
+            flightOscillator.connect(bandpassFilter);
+            bandpassFilter.connect(flightGainNode);
+            flightGainNode.connect(audioCtx.destination);
+            
+            flightGainNode.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            
+            flightOscillator.start();
+        } catch (e) {
+            console.error("Engine Start error:", e);
+        }
+    }
+
+    function updateJetEnginePitch(multiplier) {
+        try {
+            if (flightOscillator && audioCtx) {
+                // Pitch gradually increases as the aircraft scales heights
+                let nextFreq = 55 + (multiplier * 22);
+                flightOscillator.frequency.setTargetAtTime(Math.min(nextFreq, 450), audioCtx.currentTime, 0.08);
+            }
+        } catch (e) {}
+    }
+
+    function stopJetEngineSound() {
+        try {
+            if (flightOscillator) {
+                flightOscillator.stop();
+                flightOscillator.disconnect();
+                flightOscillator = null;
+            }
+        } catch (e) {}
+    }
+
+    function playWinChimeSound() {
+        try {
+            stopJetEngineSound();
+            initAudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            let baseTime = audioCtx.currentTime;
+            let winNotes = [261.63, 329.63, 392.00, 523.25]; // Synthesized chord arpeggio
+            
+            winNotes.forEach((freq, idx) => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, baseTime + idx * 0.08);
+                
+                gain.gain.setValueAtTime(0.12, baseTime + idx * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.002, baseTime + idx * 0.08 + 0.35);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(baseTime + idx * 0.08);
+                osc.stop(baseTime + idx * 0.08 + 0.35);
+            });
+        } catch (e) {
+            console.error("Win Sound error:", e);
+        }
+    }
+
+    function playExplosionCrashSound() {
+        try {
+            stopJetEngineSound();
+            initAudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            let sampleRate = audioCtx.sampleRate;
+            let bufferDuration = sampleRate * 0.6; 
+            let noiseBuffer = audioCtx.createBuffer(1, bufferDuration, sampleRate);
+            let rawData = noiseBuffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferDuration; i++) {
+                rawData[i] = Math.random() * 2 - 1;
+            }
+
+            let sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer = noiseBuffer;
+
+            let filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(280, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(5, audioCtx.currentTime + 0.6);
+
+            let gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.002, audioCtx.currentTime + 0.6);
+
+            sourceNode.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            sourceNode.start();
+        } catch (e) {
+            console.error("Crash Sound error:", e);
+        }
+    }
+
+    // =========================================================================
     // SYSTEM DATE & TIME FORMATTING UTILITY
     // =========================================================================
-    // Saves detailed Day, Date, Time, Second, and Period (AM/PM) precisely
     function getFormattedDateTime() {
         try {
             const date = new Date();
@@ -674,16 +894,15 @@
     // =========================================================================
     // MULTI-LIFECYCLE ROBUST REFERRAL CODE AUTO-FILL SYSTEM
     // =========================================================================
-    // Captures standard queries, Telegram WebApp params, hash structures & SDK objects
     function autoFillReferral() {
         try {
             let refCode = "";
 
-            // 1. Standard search parameter checks (?ref=123456, ?start=123456, ?startapp=123456, ?tgWebAppStartParam=123456)
+            // 1. Standard search parameter checks (?ref=123456, etc.)
             const urlParams = new URLSearchParams(window.location.search);
             refCode = urlParams.get('ref') || urlParams.get('start') || urlParams.get('startapp') || urlParams.get('tgWebAppStartParam');
 
-            // 2. Hash parameter checks (e.g. #tgWebAppStartParam=123456 or #ref=123456)
+            // 2. Hash parameter checks
             if (!refCode && window.location.hash) {
                 const hashClean = window.location.hash.substring(1); 
                 const hashParams = new URLSearchParams(hashClean);
@@ -701,7 +920,7 @@
                 if (refCode && String(refCode).trim().length === 6) {
                     refInput.value = String(refCode).trim();
                 } else if (!refInput.value) {
-                    refInput.value = ""; // Drop default fallback as requested
+                    refInput.value = "";
                 }
             }
         } catch (e) {
@@ -712,7 +931,7 @@
     // Run immediately since DOM elements precede this script
     autoFillReferral();
 
-    // Bind checks to all loader interfaces to guarantee execution in all engines/wrappers
+    // Bind checks to all loader interfaces
     window.addEventListener('DOMContentLoaded', autoFillReferral);
     window.addEventListener('load', autoFillReferral);
 
@@ -737,7 +956,6 @@
     }
 
     // Listens to transaction node, processes and credits pending deposits automatically upon successful state
-    // Also fires the 8% commission to the referrer automatically on deposit approval
     function listenToTransactions(phone) {
         console.log("Firebase Transactions Listener activated for:", phone);
         try {
@@ -752,28 +970,22 @@
                     let balanceChanged = false;
 
                     if (data) {
-                        // We use a clean loop to populate the transactions list first
                         Object.entries(data).forEach(([key, tx]) => {
                             if (!tx) return;
                             
                             const item = { ...tx, key: key };
                             tempTransactions.unshift(item); // Newest on top
 
-                            // If a deposit was approved but not yet credited in this client session
-                            // Safe for both Admin App and Manual Console edits
                             if (tx.type === "deposit" && tx.status === "Successful") {
-                                // 1. Credit balance and commission if not already done
                                 if (tx.credited === false) {
                                     currentBalance += parseFloat(tx.amount || 0);
                                     tx.credited = true;
                                     balanceChanged = true;
 
-                                    // Perform DB updates in next tick to avoid blocking the current render pipeline
                                     setTimeout(() => {
                                         database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
                                     }, 50);
 
-                                    // Log referral commission to referrer
                                     if (userDetails.referredBy) {
                                         const commission = parseFloat(tx.amount || 0) * 0.08;
                                         const formattedDate = getFormattedDateTime();
@@ -793,7 +1005,6 @@
                                     }
                                 }
 
-                                // 2. Show real-time alert notification if not already done
                                 if (tx.notified !== true) {
                                     setTimeout(() => {
                                         database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
@@ -802,7 +1013,6 @@
                                 }
                             }
 
-                            // If a withdrawal was approved but user hasn't been notified yet
                             if (tx.type === "withdrawal" && tx.status === "Successful" && tx.notified !== true) {
                                 setTimeout(() => {
                                     database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
@@ -812,7 +1022,6 @@
                         });
                     }
 
-                    // Update balance on the UI and database if changed
                     if (balanceChanged) {
                         userDetails.balance = currentBalance;
                         database.ref('users/' + phone + '/balance').set(currentBalance);
@@ -833,7 +1042,6 @@
     }
 
     // Listens to referred users list under logged in user's node in real-time
-    // Lists referred users according to their 6-digit ID Code
     function listenToReferredUsers(phone) {
         try {
             database.ref('users/' + phone + '/referredUsers').off();
@@ -869,6 +1077,21 @@
         }
     }
 
+    // Copying functionality for the Telebirr payment account
+    function copyTelebirr() {
+        try {
+            const numText = "0937813516";
+            navigator.clipboard.writeText(numText);
+            const msg = document.getElementById('telebirrCopyMsg');
+            if (msg) {
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3000);
+            }
+        } catch (e) {
+            console.error("Failed to copy Telebirr number:", e);
+        }
+    }
+
     // Navigation controller
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -877,6 +1100,16 @@
         const isAuthScreen = (screenId === 'screenRegister' || screenId === 'screenLogin');
         document.getElementById('appHeader').style.display = isAuthScreen ? 'none' : 'flex';
         document.getElementById('bottomNav').style.display = isAuthScreen ? 'none' : 'flex';
+
+        // Explicitly guarantee no Telegram service elements appear on the Register or Login screen
+        const floatingBtn = document.getElementById('floatingService');
+        if (floatingBtn) {
+            if (isAuthScreen) {
+                floatingBtn.style.display = 'none';
+            } else if (loggedInUserPhone) {
+                floatingBtn.style.display = 'flex';
+            }
+        }
     }
 
     function switchTab(tabId, element) {
@@ -887,7 +1120,7 @@
         element.classList.add('active');
     }
 
-    // Handles user registration with 50 ETB initial balance and robust 6-digit referral processing
+    // Handles user registration with 50 ETB initial balance
     function handleRegister(event) {
         event.preventDefault();
         const name = document.getElementById('regName').value;
@@ -916,16 +1149,13 @@
                     referredBy: ""
                 };
 
-                // Internal execution to write files to DB
                 const executeRegistration = (referrerPhone = "") => {
                     newUser.referredBy = referrerPhone;
                     
                     database.ref('users/' + phone).set(newUser).then(() => {
-                        // Map the newly registered user's 6-digit referral code
                         const myRefCode = phone.slice(-6);
                         database.ref('refCodes/' + myRefCode).set(phone);
 
-                        // If user registered with a code, record metadata under referrer
                         if (referrerPhone) {
                             database.ref('users/' + referrerPhone + '/referredUsers/' + phone).set({
                                 name: name,
@@ -942,7 +1172,6 @@
                     });
                 };
 
-                // Check and resolve the referrer phone number using the mandatory 6-digit code map
                 if (refCode) {
                     if (refCode.length !== 6) {
                         alert('Referral Code must be exactly 6 digits.');
@@ -967,7 +1196,7 @@
         });
     }
 
-    // Handles authentication with active editable input matching real-time firebase profiles
+    // Handles authentication
     function handleLogin(event) {
         event.preventDefault();
         const phone = document.getElementById('loginPhone').value;
@@ -988,16 +1217,13 @@
                     document.getElementById('profName').innerText = userDetails.name;
                     document.getElementById('profPhone').innerText = userDetails.phone;
                     
-                    // Dynamic referral link generation using the absolute dynamic page base URL to ensure 100% functionality
                     const baseUrl = window.location.href.split('?')[0];
                     document.getElementById('refLink').value = `${baseUrl}?ref=${userDetails.phone.slice(-6)}`;
                     
-                    // Activate real-time database listeners
                     listenToBalance(phone);
                     listenToTransactions(phone);
                     listenToReferredUsers(phone);
 
-                    // Check if withdrawal details are locked
                     if (userDetails.withdrawSaved) {
                         document.getElementById('withName').value = userDetails.withdrawName;
                         document.getElementById('withAccount').value = userDetails.withdrawAccount;
@@ -1021,7 +1247,8 @@
                     }
 
                     // Display Floating Telegram Service Button after login
-                    document.getElementById('floatingService').style.display = 'flex';
+                    const floatingBtn = document.getElementById('floatingService');
+                    if (floatingBtn) floatingBtn.style.display = 'flex';
 
                     showScreen('tabHome');
                     const homeNavItem = document.querySelector('.nav-item');
@@ -1060,7 +1287,8 @@
         renderHistory();
 
         // Hide Floating Telegram Service Button on Logout
-        document.getElementById('floatingService').style.display = 'none';
+        const floatingBtn = document.getElementById('floatingService');
+        if (floatingBtn) floatingBtn.style.display = 'none';
 
         showScreen('screenLogin');
     }
@@ -1085,7 +1313,7 @@
         }
     }
 
-    // Submits deposit to pending log node on Firebase RTDB waiting for external manual action
+    // Submits deposit to pending log node on Firebase RTDB
     function handleDepositSubmit(event) {
         event.preventDefault();
         const depAmount = parseFloat(document.getElementById('depAmount').value);
@@ -1102,7 +1330,7 @@
             type: "deposit",
             desc: "Deposit (FT: " + ftVal + ")",
             amount: depAmount,
-            status: "Pending", // Stays pending until external app sets this field to "Successful"
+            status: "Pending",
             credited: false,
             time: formattedDate,
             icon: "⏱️"
@@ -1185,7 +1413,7 @@
             type: "withdrawal",
             desc: "Withdrawal (CBE/Telebirr)",
             amount: -amount,
-            status: "Pending", // Withdrawal starts as pending waiting for external processing
+            status: "Pending",
             time: formattedDate,
             icon: "💸"
         };
@@ -1203,9 +1431,7 @@
         }
     }
 
-    // Renders history list with pending and successful transaction status colors
-    // Structured beautifully side-by-side inside the item layout with clear high-contrast details
-    // Bulletproof fallback logic added to prevent UI crashes if any data is corrupted/empty
+    // Renders history list
     function renderHistory() {
         try {
             const container = document.getElementById('transactionList');
@@ -1263,9 +1489,9 @@
         setTimeout(() => msg.style.display = 'none', 2000);
     }
 
-    // ==========================================
-    // REAL-TIME EXPONENTIAL AVIATOR CALCULATOR
-    // ==========================================
+    // =========================================================================
+    // REAL-TIME EXPONENTIAL AVIATOR CALCULATOR WITH DYNAMIC HUD/SOUNDS
+    // =========================================================================
     let isPlaying = false;
     let isCrashed = false;
     let isCashedOut = false;
@@ -1280,10 +1506,10 @@
         const betInput = document.getElementById('betAmount');
 
         if (!isPlaying && !isCountingDown) {
-            // Verify Stake
+            // Verify Stake (Strict boundaries: 4 ETB - 4000 ETB) [1]
             currentBetAmount = parseFloat(betInput.value);
-            if (isNaN(currentBetAmount) || currentBetAmount <= 0) {
-                alert("Please enter a valid bet amount!");
+            if (isNaN(currentBetAmount) || currentBetAmount < 4 || currentBetAmount > 4000) {
+                alert("የመጫወቻው መጠን ከ 4 እስከ 4000 ETB መሆን አለበት!");
                 return;
             }
             if (currentBetAmount > userDetails.balance) {
@@ -1295,11 +1521,18 @@
             userDetails.balance -= currentBetAmount;
             syncUserBalance();
 
-            // Set state to Countdown Phase
+            // Set state to Countdown Phase (Manual start by customer interaction) [1]
             isCountingDown = true;
             betInput.disabled = true;
+            
+            // Clear prior trails and styles [1]
             document.getElementById('crashMessage').style.display = 'none';
-            document.getElementById('liveMultiplier').style.color = varColor('--primary-gold');
+            document.getElementById('liveMultiplier').style.display = 'block'; 
+            document.getElementById('liveMultiplier').style.color = '#56ccf2';
+            document.getElementById('trajectoryPath').setAttribute('d', '');
+
+            // Play prep tick sound
+            playFlightStartSound();
 
             // 3-Second Preparation Countdown
             let countdownValue = 3;
@@ -1325,10 +1558,13 @@
             userDetails.balance += wonAmount;
             syncUserBalance();
 
+            // Trigger Win sound arpeggio
+            playWinChimeSound();
+
             btn.innerHTML = `WON +${wonAmount.toFixed(2)} ETB`;
             btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
             btn.style.color = 'white';
-            document.getElementById('liveMultiplier').style.color = varColor('--accent-green');
+            document.getElementById('liveMultiplier').style.color = 'var(--accent-green)';
 
             const formattedDate = getFormattedDateTime();
 
@@ -1354,11 +1590,14 @@
         isCashedOut = false;
         liveMultiplier = 1.00;
 
+        // Trigger loopable hum engine sound
+        startJetEngineSound();
+
         const btn = document.getElementById('gameActionBtn');
         btn.disabled = false;
         btn.style.background = 'linear-gradient(135deg, #ff4757, #ff6b81)';
         btn.style.color = 'white';
-        // Live winnings designed to render in bold and high-contrast glowing green on a dedicated line
+        // Bold high-contrast glowing live winnings
         btn.innerHTML = `CASH OUT <br><span style="font-size:1.1rem; color:#2ecc71; font-weight:800; display:block; margin-top:4px; text-shadow:0 0 10px rgba(46,204,113,0.5);" id="liveWinnings">${currentBetAmount.toFixed(2)} ETB</span>`;
 
         // Mathematical Exponential Random Crash Point Generator
@@ -1366,11 +1605,11 @@
         if (r < 0.12) {
             crashPoint = 1.00; // Immediate early crash (12% chance)
         } else if (r < 0.6) {
-            crashPoint = 1.01 + (Math.random() * 1.5); // 1.01x to 2.51x
+            crashPoint = 1.01 + (Math.random() * 1.5); 
         } else if (r < 0.92) {
-            crashPoint = 2.50 + (Math.random() * 5.0); // 2.50x to 7.50x
+            crashPoint = 2.50 + (Math.random() * 5.0); 
         } else {
-            crashPoint = 7.50 + (Math.random() * 20.0); // 7.50x to 27.50x
+            crashPoint = 7.50 + (Math.random() * 20.0); 
         }
 
         document.getElementById('plane').style.display = 'block';
@@ -1387,6 +1626,9 @@
             
             document.getElementById('liveMultiplier').innerText = liveMultiplier.toFixed(2) + "x";
             
+            // Sync engine pitch with current multiplier value
+            updateJetEnginePitch(liveMultiplier);
+
             if (!isCashedOut) {
                 const currentWin = currentBetAmount * liveMultiplier;
                 const winningsEl = document.getElementById('liveWinnings');
@@ -1395,18 +1637,29 @@
                 }
             }
 
-            // An animate SVG Plane along diagonal path
+            // Animate Fighter Jet along curved supersonic path matching reference image HUD
             const plane = document.getElementById('plane');
-            const xPos = Math.min(elapsed * 28, 260);
-            const yPos = -Math.min(elapsed * 16, 120);
-            plane.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            const trajPath = document.getElementById('trajectoryPath');
+            
+            const planeX = Math.min(elapsed * 28, 260);
+            const planeY = -Math.min(elapsed * 16, 120);
+            
+            plane.style.transform = `translate(${planeX}px, ${planeY}px)`;
+
+            // Dynamically paint the glowing blue trace trail path behind jet [1]
+            // Arena height is 220px. Adjust points to start relative to bottom left corner.
+            const startX = 45;
+            const startY = 185;
+            const currentX = startX + planeX;
+            const currentY = startY + planeY;
+            trajPath.setAttribute('d', `M ${startX} ${startY} Q ${startX + (planeX/2)} ${startY} ${currentX} ${currentY}`);
 
             // Trigger Crash Event
             if (liveMultiplier >= crashPoint) {
                 triggerCrash();
             }
 
-        }, 50); // Frequent smooth updates (50ms cycles)
+        }, 50); // Smooth updates (50ms cycles)
     }
 
     function triggerCrash() {
@@ -1414,13 +1667,17 @@
         isCrashed = true;
         isPlaying = false;
         
+        // Fire crash sound effect
+        playExplosionCrashSound();
+
         document.getElementById('plane').style.display = 'none';
+        
+        // Hide multiplier text completely as requested upon crash [1]
+        document.getElementById('liveMultiplier').style.display = 'none';
+
         const msg = document.getElementById('crashMessage');
         msg.innerText = `FLEW AWAY @ ${liveMultiplier.toFixed(2)}x`;
         msg.style.display = 'block';
-
-        document.getElementById('liveMultiplier').innerText = liveMultiplier.toFixed(2) + "x";
-        document.getElementById('liveMultiplier').style.color = '#ff4757';
 
         const btn = document.getElementById('gameActionBtn');
         btn.innerHTML = `BET`;
@@ -1461,19 +1718,22 @@
         }
     }
 
+    // CSS variables helper
     function varColor(name) {
         return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     }
 
-    // ========================================================
-    // DRAGGABLE/MOVABLE FUNCTIONALITY FOR TELEGRAM SERVICE BUTTON
-    // ========================================================
+    // =========================================================================
+    // DRAGGABLE FUNCTIONALITY FOR TELEGRAM FLOATING BUTTON
+    // =========================================================================
     const dragEl = document.getElementById('floatingService');
     let isDragging = false;
     let startX, startY, initialX, initialY;
 
-    dragEl.addEventListener('mousedown', dragStart);
-    dragEl.addEventListener('touchstart', dragStart, { passive: true });
+    if (dragEl) {
+        dragEl.addEventListener('mousedown', dragStart);
+        dragEl.addEventListener('touchstart', dragStart, { passive: true });
+    }
 
     function dragStart(e) {
         isDragging = false; 
@@ -1504,7 +1764,6 @@
         let newLeft = initialX + dx;
         let newTop = initialY + dy;
 
-        // Constraint adjustments within phone-container boundary
         const container = document.querySelector('.phone-container');
         const maxLeft = container.clientWidth - dragEl.offsetWidth - 10;
         const maxTop = container.clientHeight - dragEl.offsetHeight - 10;
@@ -1525,11 +1784,13 @@
         document.removeEventListener('touchend', dragEnd);
     }
 
-    dragEl.addEventListener('click', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-        }
-    });
+    if (dragEl) {
+        dragEl.addEventListener('click', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+            }
+        });
+    }
 </script>
 
 </body>
