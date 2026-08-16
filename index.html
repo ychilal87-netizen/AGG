@@ -396,7 +396,7 @@
     <!-- Universal Top Header -->
     <div class="app-header" id="appHeader" style="display: none;">
         <h1>AVIATOR GOLD</h1>
-        <div class="balance-badge">Bal: <span id="userBalance">50.00</span> ETB</div>
+        <div class="balance-badge">Bal: <span id="userBalance">15.00</span> ETB</div>
     </div>
 
     <!-- ================= 1. REGISTRATION SCREEN ================= -->
@@ -711,7 +711,7 @@
         name: "",
         phone: "",
         password: "",
-        balance: 50.00, // 50 ETB Sign-up Bonus for new users
+        balance: 15.00, // Adjusted Sign-up Bonus to 15.00 ETB
         withdrawName: "",
         withdrawAccount: "",
         withdrawSaved: false,
@@ -727,6 +727,7 @@
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     let flightOscillator = null;
+    let flightOscillator2 = null; // Detuned dual oscillator for thick engine audio
     let flightGainNode = null;
 
     function initAudioContext() {
@@ -765,22 +766,29 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             flightOscillator = audioCtx.createOscillator();
+            flightOscillator2 = audioCtx.createOscillator();
             flightGainNode = audioCtx.createGain();
             
             flightOscillator.type = 'sawtooth';
-            flightOscillator.frequency.setValueAtTime(55, audioCtx.currentTime); // Deep hum
+            flightOscillator.frequency.setValueAtTime(55, audioCtx.currentTime); // Deep rumbling hum
+            
+            flightOscillator2.type = 'triangle';
+            flightOscillator2.frequency.setValueAtTime(110.5, audioCtx.currentTime); // Detuned octave for rich tone
             
             let bandpassFilter = audioCtx.createBiquadFilter();
             bandpassFilter.type = 'lowpass';
-            bandpassFilter.frequency.setValueAtTime(140, audioCtx.currentTime);
+            bandpassFilter.frequency.setValueAtTime(250, audioCtx.currentTime); // Widened filter range
 
             flightOscillator.connect(bandpassFilter);
+            flightOscillator2.connect(bandpassFilter);
             bandpassFilter.connect(flightGainNode);
             flightGainNode.connect(audioCtx.destination);
             
-            flightGainNode.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            // Boosted gain (Volume) significantly for dramatic presence
+            flightGainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
             
             flightOscillator.start();
+            flightOscillator2.start();
         } catch (e) {
             console.error("Engine Start error:", e);
         }
@@ -789,9 +797,12 @@
     function updateJetEnginePitch(multiplier) {
         try {
             if (flightOscillator && audioCtx) {
-                // Pitch gradually increases as the aircraft scales heights
                 let nextFreq = 55 + (multiplier * 22);
                 flightOscillator.frequency.setTargetAtTime(Math.min(nextFreq, 450), audioCtx.currentTime, 0.08);
+            }
+            if (flightOscillator2 && audioCtx) {
+                let nextFreq2 = 110.5 + (multiplier * 44);
+                flightOscillator2.frequency.setTargetAtTime(Math.min(nextFreq2, 900), audioCtx.currentTime, 0.08);
             }
         } catch (e) {}
     }
@@ -802,6 +813,11 @@
                 flightOscillator.stop();
                 flightOscillator.disconnect();
                 flightOscillator = null;
+            }
+            if (flightOscillator2) {
+                flightOscillator2.stop();
+                flightOscillator2.disconnect();
+                flightOscillator2 = null;
             }
         } catch (e) {}
     }
@@ -1122,7 +1138,7 @@
         element.classList.add('active');
     }
 
-    // Handles user registration with 50 ETB initial balance
+    // Handles user registration with 15 ETB initial balance and limits registration to 3 accounts per browser/device
     function handleRegister(event) {
         event.preventDefault();
         const name = document.getElementById('regName').value;
@@ -1135,6 +1151,16 @@
             return;
         }
 
+        // --- Multi-Account Device Restriction ---
+        let registeredDevices = localStorage.getItem('registered_phones');
+        let phonesList = registeredDevices ? JSON.parse(registeredDevices) : [];
+
+        // Check if device limits are crossed (Allowing max 3 unique account registrations)
+        if (phonesList.length >= 3 && !phonesList.includes(phone)) {
+            alert("ይቅርታ! በአንድ ስልክ ቀፎ ከ3 በላይ አካውንት መክፈት አይቻልም። / Sorry, you cannot register more than 3 accounts on this device.");
+            return;
+        }
+
         database.ref('users/' + phone).once('value').then((snapshot) => {
             if (snapshot.exists()) {
                 alert('An account with this phone number already exists!');
@@ -1143,7 +1169,7 @@
                     name: name,
                     phone: phone,
                     password: password,
-                    balance: 50.00,
+                    balance: 15.00, // Sign-up bonus adjusted to 15.00 ETB
                     withdrawName: "",
                     withdrawAccount: "",
                     withdrawSaved: false,
@@ -1166,7 +1192,13 @@
                             });
                         }
 
-                        alert('Registration successful! You have received a 50 ETB Sign-up Bonus. You may now login.');
+                        // Store device footprint of registered phone securely
+                        if (!phonesList.includes(phone)) {
+                            phonesList.push(phone);
+                            localStorage.setItem('registered_phones', JSON.stringify(phonesList));
+                        }
+
+                        alert('Registration successful! You have received a 15 ETB Sign-up Bonus. You may now login.');
                         document.getElementById('loginPhone').value = phone;
                         showScreen('screenLogin');
                     }).catch((error) => {
@@ -1277,7 +1309,7 @@
             name: "",
             phone: "",
             password: "",
-            balance: 50.00,
+            balance: 15.00,
             withdrawName: "",
             withdrawAccount: "",
             withdrawSaved: false,
@@ -1550,17 +1582,43 @@
         document.getElementById('plane').style.display = 'block';
         document.getElementById('plane').style.transform = 'translate(0px, 0px)';
 
-        // Mathematical Exponential Random Crash Point Generator
-        const r = Math.random();
-        if (r < 0.12) {
-            crashPoint = 1.00; // Immediate early crash (12% chance)
-        } else if (r < 0.6) {
-            crashPoint = 1.01 + (Math.random() * 1.5); 
-        } else if (r < 0.92) {
-            crashPoint = 2.50 + (Math.random() * 5.0); 
-        } else {
-            crashPoint = 7.50 + (Math.random() * 20.0); 
+        // =====================================================================
+        // RIGOROUS SCIENTIFIC ODDS DISTRIBUTION SYSTEM & COOLDOWN CONTROLS
+        // =====================================================================
+        // Read previous crash point for sequential tracking to avoid back-to-back high multipliers
+        let lastCrash = parseFloat(localStorage.getItem('last_crash_point') || '1.5');
+        
+        let forcedLowMultiplier = false;
+        if (lastCrash >= 10.0) {
+            forcedLowMultiplier = true; // Enforce anti-consecutive high multiplier rule
         }
+
+        const r = Math.random() * 100;
+
+        if (forcedLowMultiplier) {
+            // Force a lower tier crash (Between 1.01x and 2.99x)
+            crashPoint = parseFloat((1.01 + Math.random() * 1.98).toFixed(2));
+        } else {
+            if (r < 80) {
+                // 80% Distribution Tier: Under 3.00x (Range: 1.01x to 2.99x)
+                crashPoint = parseFloat((1.01 + Math.random() * 1.98).toFixed(2));
+            } else if (r < 90) {
+                // 10% Distribution Tier: 3.00x to 10.00x
+                crashPoint = parseFloat((3.00 + Math.random() * 7.00).toFixed(2));
+            } else if (r < 97) {
+                // 7% Distribution Tier: 10.00x to 20.00x
+                crashPoint = parseFloat((10.00 + Math.random() * 10.00).toFixed(2));
+            } else if (r < 99) {
+                // 2% Distribution Tier: 20.00x to 100.00x
+                crashPoint = parseFloat((20.00 + Math.random() * 80.00).toFixed(2));
+            } else {
+                // 1% Extreme Peak Tier: Standard 1000.00x sporadic jackpot limit (Once per month probability feel)
+                crashPoint = 1000.00;
+            }
+        }
+
+        // Store generated crash point locally for next round tracking to prevent sequential high values
+        localStorage.setItem('last_crash_point', crashPoint.toString());
 
         let startTime = Date.now();
         
