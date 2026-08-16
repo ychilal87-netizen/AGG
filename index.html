@@ -851,7 +851,7 @@
                         `;
                     }).join('');
                 } else {
-                    listEl.innerHTML = `<p style="text-align: center; color: var(--text-muted);">No referred users yet.</p>`;
+                    listEl.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">No referred users yet.</p>`;
                 }
             });
         } catch (e) {
@@ -1065,6 +1065,144 @@
         showScreen('screenLogin');
     }
 
+    function updateBalanceUI() {
+        document.getElementById('userBalance').innerText = userDetails.balance.toFixed(2);
+    }
+
+    // Wallet transaction switcher
+    function switchWalletTab(type) {
+        document.getElementById('btnTabDep').classList.remove('active');
+        document.getElementById('btnTabWith').classList.remove('active');
+        document.getElementById('sectionDeposit').classList.remove('active');
+        document.getElementById('sectionWithdraw').classList.remove('active');
+
+        if (type === 'deposit') {
+            document.getElementById('btnTabDep').classList.add('active');
+            document.getElementById('sectionDeposit').classList.add('active');
+        } else {
+            document.getElementById('btnTabWith').classList.add('active');
+            document.getElementById('sectionWithdraw').classList.add('active');
+        }
+    }
+
+    // Submits deposit to pending log node on Firebase RTDB waiting for external manual action
+    function handleDepositSubmit(event) {
+        event.preventDefault();
+        const depAmount = parseFloat(document.getElementById('depAmount').value);
+        const ftVal = document.getElementById('depFT').value;
+        
+        if (isNaN(depAmount) || depAmount <= 0) {
+            alert("Please enter a valid deposit amount.");
+            return;
+        }
+
+        const formattedDate = getFormattedDateTime();
+
+        const newDepositTx = {
+            type: "deposit",
+            desc: "Deposit (FT: " + ftVal + ")",
+            amount: depAmount,
+            status: "Pending", // Stays pending until external app sets this field to "Successful"
+            credited: false,
+            time: formattedDate,
+            icon: "⏱️"
+        };
+
+        if (loggedInUserPhone) {
+            console.log("Submitting Deposit Request to Database:", newDepositTx);
+            database.ref('users/' + loggedInUserPhone + '/transactions').push(newDepositTx).then(() => {
+                alert(`Your deposit request of ${depAmount} ETB has been submitted. It will remain Pending until approved.`);
+                
+                document.getElementById('depAmount').value = "";
+                document.getElementById('depFT').value = "";
+                document.getElementById('depImage').value = "";
+            }).catch((error) => {
+                alert("Failed to submit deposit: " + error.message);
+            });
+        } else {
+            alert("Please login first.");
+        }
+    }
+
+    // Secure Bank profile save
+    function handleWithdrawSave(event) {
+        event.preventDefault();
+        const withName = document.getElementById('withName').value;
+        const withAccount = document.getElementById('withAccount').value;
+
+        userDetails.withdrawName = withName;
+        userDetails.withdrawAccount = withAccount;
+        userDetails.withdrawSaved = true;
+
+        document.getElementById('withName').disabled = true;
+        document.getElementById('withAccount').disabled = true;
+        document.getElementById('btnSaveWithdraw').style.display = 'none';
+
+        const banner = document.getElementById('withdrawSavedMsg');
+        banner.innerText = `Saved Account: ${withName} (${withAccount}). Edits are restricted within the app.`;
+        banner.style.display = 'block';
+
+        document.getElementById('actualWithdrawSection').style.display = 'block';
+
+        if (loggedInUserPhone) {
+            database.ref('users/' + loggedInUserPhone).update({
+                withdrawName: withName,
+                withdrawAccount: withAccount,
+                withdrawSaved: true
+            });
+        }
+    }
+
+    // Withdrawal process with strict 1x daily limit and 200 - 5000 ETB range
+    function requestWithdrawal() {
+        if (userDetails.hasWithdrawnToday) {
+            alert("Limit reached: You are allowed only 1 withdrawal request per day.");
+            return;
+        }
+
+        const amount = parseFloat(document.getElementById('withAmount').value);
+        if (isNaN(amount)) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        if (amount < 200 || amount > 5000) {
+            alert("Transaction Denied: Withdrawal must be between 200 ETB and 5000 ETB.");
+            return;
+        }
+
+        if (amount > userDetails.balance) {
+            alert("Insufficient funds in your account.");
+            return;
+        }
+
+        userDetails.balance -= amount;
+        userDetails.hasWithdrawnToday = true; 
+        
+        const formattedDate = getFormattedDateTime();
+
+        const newWithdrawTx = {
+            type: "withdrawal",
+            desc: "Withdrawal (CBE/Telebirr)",
+            amount: -amount,
+            status: "Pending", // Withdrawal starts as pending waiting for external processing
+            time: formattedDate,
+            icon: "💸"
+        };
+
+        if (loggedInUserPhone) {
+            console.log("Submitting Withdrawal Request to Database:", newWithdrawTx);
+            database.ref('users/' + loggedInUserPhone).update({
+                balance: userDetails.balance,
+                hasWithdrawnToday: true
+            }).then(() => {
+                database.ref('users/' + loggedInUserPhone + '/transactions').push(newWithdrawTx);
+                alert(`Withdrawal request of ${amount} ETB has been submitted and is currently Pending.`);
+                document.getElementById('withAmount').value = "";
+            });
+        }
+    }
+
     // Renders history list with pending and successful transaction status colors
     // Structured beautifully side-by-side inside the item layout with clear high-contrast details
     // Bulletproof fallback logic added to prevent UI crashes if any data is corrupted/empty
@@ -1110,26 +1248,6 @@
         } catch (renderError) {
             console.error("Rendering History panel failed:", renderError);
             alert("History UI Error: " + renderError.message);
-        }
-    }
-
-    function updateBalanceUI() {
-        document.getElementById('userBalance').innerText = userDetails.balance.toFixed(2);
-    }
-
-    // Wallet transaction switcher
-    function switchWalletTab(type) {
-        document.getElementById('btnTabDep').classList.remove('active');
-        document.getElementById('btnTabWith').classList.remove('active');
-        document.getElementById('sectionDeposit').classList.remove('active');
-        document.getElementById('sectionWithdraw').classList.remove('active');
-
-        if (type === 'deposit') {
-            document.getElementById('btnTabDep').classList.add('active');
-            document.getElementById('sectionDeposit').classList.add('active');
-        } else {
-            document.getElementById('btnTabWith').classList.add('active');
-            document.getElementById('sectionWithdraw').classList.add('active');
         }
     }
 
