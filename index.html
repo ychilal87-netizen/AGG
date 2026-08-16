@@ -301,6 +301,7 @@
             margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 0.8rem;
         }
 
@@ -639,6 +640,24 @@
     let transactions = [];
 
     // =========================================================================
+    // SYSTEM DATE & TIME FORMATTING UTILITY
+    // =========================================================================
+    // Saves detailed Day, Date, Time, Second, and Period (AM/PM) precisely
+    function getFormattedDateTime() {
+        const date = new Date();
+        const mm = date.getMonth() + 1;
+        const dd = date.getDate();
+        const yyyy = date.getFullYear();
+        let hh = date.getHours();
+        const ampm = hh >= 12 ? 'PM' : 'AM';
+        hh = hh % 12;
+        hh = hh ? hh : 12; // hour '0' should be '12'
+        const min = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
+        const sec = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+        return `${mm}/${dd}/${yyyy} ${hh}:${min}:${sec} ${ampm}`;
+    }
+
+    // =========================================================================
     // MULTI-LIFECYCLE ROBUST REFERRAL CODE AUTO-FILL SYSTEM
     // =========================================================================
     // Captures standard queries, Telegram WebApp params, hash structures & SDK objects
@@ -719,8 +738,7 @@
                         // Continuous Referral Commission Logic - Adds 8% of approved deposit to referrer balance
                         if (userDetails.referredBy) {
                             const commission = parseFloat(tx.amount) * 0.08;
-                            const date = new Date();
-                            const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+                            const formattedDate = getFormattedDateTime();
                             
                             // Multi-user concurrency safe transaction to securely adjust referrer balance
                             database.ref('users/' + userDetails.referredBy + '/balance').transaction((bal) => {
@@ -941,7 +959,7 @@
                         document.getElementById('withAccount').disabled = false;
                         document.getElementById('btnSaveWithdraw').style.display = 'block';
                         document.getElementById('withdrawSavedMsg').style.display = 'none';
-                        document.getElementById('actualWithdrawSection').style.none;
+                        document.getElementById('actualWithdrawSection').style.display = 'none';
                     }
 
                     // Display Floating Telegram Service Button after login
@@ -1020,8 +1038,7 @@
             return;
         }
 
-        const date = new Date();
-        const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+        const formattedDate = getFormattedDateTime();
 
         const newDepositTx = {
             type: "deposit",
@@ -1103,8 +1120,7 @@
         userDetails.balance -= amount;
         userDetails.hasWithdrawnToday = true; 
         
-        const date = new Date();
-        const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+        const formattedDate = getFormattedDateTime();
 
         const newWithdrawTx = {
             type: "withdrawal",
@@ -1128,6 +1144,8 @@
     }
 
     // Renders history list with pending and successful transaction status colors
+    // Structured beautifully side-by-side inside the item layout with clear high-contrast details
+    // Bulletproof fallback logic added to prevent UI crashes if any data is corrupted/empty
     function renderHistory() {
         const container = document.getElementById('transactionList');
         if (transactions.length === 0) {
@@ -1136,24 +1154,29 @@
         }
 
         container.innerHTML = transactions.map(item => {
+            if (!item) return '';
+
             let statusBadge = "";
             if (item.status) {
                 const badgeColor = item.status === "Successful" ? "var(--accent-green)" : "#e67e22";
-                statusBadge = `<span style="font-size: 0.7rem; color: ${badgeColor}; font-weight: bold; border: 1px solid ${badgeColor}; padding: 1px 4px; border-radius: 4px; margin-left: 5px;">${item.status}</span>`;
+                statusBadge = `<span style="font-size: 0.65rem; color: ${badgeColor}; font-weight: bold; border: 1px solid ${badgeColor}; padding: 1px 4px; border-radius: 4px; margin-left: 5px;">${item.status}</span>`;
             }
 
-            const isNegative = typeof item.amount === 'number' ? item.amount < 0 : String(item.amount).startsWith('-');
-            const displayAmount = typeof item.amount === 'number' ? Math.abs(item.amount).toFixed(2) : parseFloat(String(item.amount).replace(/[^0-9.]/g, '')).toFixed(2);
+            const amountVal = item.amount !== undefined && item.amount !== null ? item.amount : 0;
+            const isNegative = typeof amountVal === 'number' ? amountVal < 0 : String(amountVal).startsWith('-');
+            const displayAmount = typeof amountVal === 'number' ? Math.abs(amountVal).toFixed(2) : parseFloat(String(amountVal).replace(/[^0-9.]/g, '') || '0').toFixed(2);
             const amountPrefix = isNegative ? "-" : "+";
             const amountColor = isNegative ? "#ff4757" : "var(--accent-green)";
 
             return `
-                <div class="transaction-item">
-                    <div>
-                        <span>${item.icon} <strong>${item.desc}</strong> ${statusBadge}</span><br>
-                        <span style="font-size:0.7rem; color:var(--text-muted);">${item.time}</span>
+                <div class="transaction-item" style="display: flex; justify-content: space-between; align-items: center; background-color: #faf8f5; border: 1px solid var(--border-gold); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 4px;">
+                            ${item.icon || '⏱️'} ${item.desc || 'Transaction'} ${statusBadge}
+                        </span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">${item.time || 'N/A'}</span>
                     </div>
-                    <div style="font-weight:bold; display: flex; align-items: center; color: ${amountColor};">
+                    <div style="font-weight: bold; font-size: 0.85rem; color: ${amountColor}; text-align: right;">
                         ${amountPrefix}${displayAmount} ETB
                     </div>
                 </div>
@@ -1240,8 +1263,7 @@
             btn.style.color = 'white';
             document.getElementById('liveMultiplier').style.color = varColor('--accent-green');
 
-            const date = new Date();
-            const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+            const formattedDate = getFormattedDateTime();
 
             const winTx = {
                 type: "win",
@@ -1341,8 +1363,7 @@
         document.getElementById('betAmount').disabled = false;
 
         if (!isCashedOut) {
-            const date = new Date();
-            const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0':''}${date.getMinutes()}`;
+            const formattedDate = getFormattedDateTime();
 
             const lossTx = {
                 type: "loss",
