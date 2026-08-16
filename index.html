@@ -158,7 +158,7 @@
             border: 1px solid var(--border-gold);
         }
 
-        /* Custom SVG Plane Icon and Flying Arena - Clean Bright Light Style */
+        /* Custom SVG Plane Icon and Flying Arena */
         .game-arena {
             background: linear-gradient(180deg, #fdfdfa 0%, #f7f3e6 100%);
             border-radius: 12px;
@@ -383,7 +383,7 @@
                 <label for="regPassword">6-Digit Password</label>
                 <input type="password" id="regPassword" class="form-control" placeholder="******" maxlength="6" pattern="\d{6}" title="Password must be exactly a 6-digit number" required>
             </div>
-            <!-- Dynamic 6-digit Referral input field (Mandatory/Required) as requested -->
+            <!-- Dynamic 6-digit Referral input field (Mandatory/Required) -->
             <div class="form-group">
                 <label for="regReferral">Referral Code (6-Digit)</label>
                 <input type="text" id="regReferral" class="form-control" placeholder="6-digit code" maxlength="6" pattern="\d{6}" required>
@@ -638,20 +638,51 @@
 
     let transactions = [];
 
-    // Auto load referral code from URL parameter on DOM load.
-    // Fixed: Does not populate default "123456" anymore. Only populates the 6-digit code of the referrer from url.
-    window.addEventListener('DOMContentLoaded', () => {
+    // =========================================================================
+    // MULTI-LIFECYCLE ROBUST REFERRAL CODE AUTO-FILL SYSTEM
+    // =========================================================================
+    // Captures standard queries, Telegram WebApp params, hash structures & SDK objects
+    function autoFillReferral() {
+        let refCode = "";
+
+        // 1. Standard search parameter checks (?ref=123456, ?start=123456, ?startapp=123456, ?tgWebAppStartParam=123456)
         const urlParams = new URLSearchParams(window.location.search);
-        const refCode = urlParams.get('ref');
+        refCode = urlParams.get('ref') || urlParams.get('start') || urlParams.get('startapp') || urlParams.get('tgWebAppStartParam');
+
+        // 2. Hash parameter checks (e.g. #tgWebAppStartParam=123456 or #ref=123456)
+        if (!refCode && window.location.hash) {
+            const hashClean = window.location.hash.substring(1); 
+            const hashParams = new URLSearchParams(hashClean);
+            refCode = hashParams.get('ref') || hashParams.get('tgWebAppStartParam') || hashParams.get('start_param') || hashParams.get('startapp');
+        }
+
+        // 3. Telegram WebApp SDK internal parameter checks
+        if (!refCode && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+            refCode = window.Telegram.WebApp.initDataUnsafe.start_param;
+        }
+
+        // Apply clean formatting checks
         const refInput = document.getElementById('regReferral');
         if (refInput) {
-            if (refCode && refCode.length === 6) {
-                refInput.value = refCode;
-            } else {
-                refInput.value = ""; 
+            if (refCode && String(refCode).trim().length === 6) {
+                refInput.value = String(refCode).trim();
+            } else if (!refInput.value) {
+                refInput.value = ""; // Drop default fallback as requested
             }
         }
-    });
+    }
+
+    // Run immediately since DOM elements precede this script
+    autoFillReferral();
+
+    // Bind checks to all loader interfaces to guarantee execution in all engines/wrappers
+    window.addEventListener('DOMContentLoaded', autoFillReferral);
+    window.addEventListener('load', autoFillReferral);
+
+    // Progressive retry schedules to handle slow Telegram WebApp initializations
+    setTimeout(autoFillReferral, 200);
+    setTimeout(autoFillReferral, 500);
+    setTimeout(autoFillReferral, 1000);
 
     // Realtime Sync Handlers
     function listenToBalance(phone) {
@@ -709,6 +740,14 @@
 
                         alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
                     }
+
+                    // =========================================================
+                    // ADDED: REAL-TIME NOTIFICATION ALERT FOR SUCCESSFUL WITHDRAWALS
+                    // =========================================================
+                    if (tx.type === "withdrawal" && tx.status === "Successful" && tx.notified !== true) {
+                        database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
+                        alert(`Success! Your withdrawal request of ${Math.abs(tx.amount)} ETB has been approved and processed.`);
+                    }
                     
                     tx.key = key; 
                     transactions.unshift(tx); // Ensure newest transactions always appear on top
@@ -726,7 +765,7 @@
     }
 
     // Listens to referred users list under logged in user's node in real-time
-    // Fixed: Lists referred users according to their 6-digit ID Code
+    // Lists referred users according to their 6-digit ID Code
     function listenToReferredUsers(phone) {
         database.ref('users/' + phone + '/referredUsers').off();
         database.ref('users/' + phone + '/referredUsers').on('value', (snapshot) => {
@@ -902,7 +941,7 @@
                         document.getElementById('withAccount').disabled = false;
                         document.getElementById('btnSaveWithdraw').style.display = 'block';
                         document.getElementById('withdrawSavedMsg').style.display = 'none';
-                        document.getElementById('actualWithdrawSection').style.display = 'none';
+                        document.getElementById('actualWithdrawSection').style.none;
                     }
 
                     // Display Floating Telegram Service Button after login
