@@ -608,6 +608,12 @@
 </div>
 
 <script>
+    // Global Error Logger for troubleshooting on devices
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error("System Error caught:", message, "at", source, "line:", lineno);
+        return false;
+    };
+
     // Firebase initialization with provided configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBDpxtndV-DBhw2cMLem4BfLzX2Z8k1RvA",
@@ -717,66 +723,84 @@
     // Listens to transaction node, processes and credits pending deposits automatically upon successful state
     // Also fires the 8% commission to the referrer automatically on deposit approval
     function listenToTransactions(phone) {
+        console.log("Firebase Transactions Listener activated for:", phone);
         database.ref('users/' + phone + '/transactions').off();
         database.ref('users/' + phone + '/transactions').on('value', (snapshot) => {
             const data = snapshot.val();
-            transactions = [];
-            let updatedBalanceNeeded = false;
-            let currentBalance = userDetails.balance;
+            console.log("Transactions loaded:", data);
+            
+            const tempTransactions = [];
+            let currentBalance = parseFloat(userDetails.balance || 0);
+            let balanceChanged = false;
 
             if (data) {
+                // We use a clean loop to populate the transactions list first
                 Object.entries(data).forEach(([key, tx]) => {
-                    // Detect deposit status change to successful that has not been credited yet
-                    if (tx.type === "deposit" && tx.status === "Successful" && tx.credited === false) {
-                        currentBalance += parseFloat(tx.amount);
-                        tx.credited = true;
-                        
-                        // Set transaction to credited state to avoid double crediting
-                        database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
-                        updatedBalanceNeeded = true;
-                        
-                        // Continuous Referral Commission Logic - Adds 8% of approved deposit to referrer balance
-                        if (userDetails.referredBy) {
-                            const commission = parseFloat(tx.amount) * 0.08;
-                            const formattedDate = getFormattedDateTime();
-                            
-                            // Multi-user concurrency safe transaction to securely adjust referrer balance
-                            database.ref('users/' + userDetails.referredBy + '/balance').transaction((bal) => {
-                                return (bal || 0) + commission;
-                            });
+                    if (!tx) return;
+                    
+                    const item = { ...tx, key: key };
+                    tempTransactions.unshift(item); // Newest on top
 
-                            // Logs commission transaction history under referrer's profile
-                            database.ref('users/' + userDetails.referredBy + '/transactions').push({
-                                type: "referral_commission",
-                                desc: `Referral Commission (From ID: ${userDetails.phone.slice(-6)})`,
-                                amount: commission,
-                                status: "Successful",
-                                time: formattedDate,
-                                icon: "🎁"
-                            });
+                    // If a deposit was approved but not yet credited in this client session
+                    // Safe for both Admin App and Manual Console edits
+                    if (tx.type === "deposit" && tx.status === "Successful") {
+                        // 1. Credit balance and commission if not already done
+                        if (tx.credited === false) {
+                            currentBalance += parseFloat(tx.amount || 0);
+                            tx.credited = true;
+                            balanceChanged = true;
+
+                            // Perform DB updates in next tick to avoid blocking the current render pipeline
+                            setTimeout(() => {
+                                database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
+                            }, 50);
+
+                            // Log referral commission to referrer
+                            if (userDetails.referredBy) {
+                                const commission = parseFloat(tx.amount || 0) * 0.08;
+                                const formattedDate = getFormattedDateTime();
+
+                                database.ref('users/' + userDetails.referredBy + '/balance').transaction((bal) => {
+                                    return (bal || 0) + commission;
+                                });
+
+                                database.ref('users/' + userDetails.referredBy + '/transactions').push({
+                                    type: "referral_commission",
+                                    desc: `Referral Commission (From ID: ${userDetails.phone.slice(-6)})`,
+                                    amount: commission,
+                                    status: "Successful",
+                                    time: formattedDate,
+                                    icon: "🎁"
+                                });
+                            }
                         }
 
-                        alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
+                        // 2. Show real-time alert notification if not already done
+                        if (tx.notified !== true) {
+                            setTimeout(() => {
+                                database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
+                                alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
+                            }, 100);
+                        }
                     }
 
-                    // =========================================================
-                    // ADDED: REAL-TIME NOTIFICATION ALERT FOR SUCCESSFUL WITHDRAWALS
-                    // =========================================================
+                    // If a withdrawal was approved but user hasn't been notified yet
                     if (tx.type === "withdrawal" && tx.status === "Successful" && tx.notified !== true) {
-                        database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
-                        alert(`Success! Your withdrawal request of ${Math.abs(tx.amount)} ETB has been approved and processed.`);
+                        setTimeout(() => {
+                            database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
+                            alert(`Success! Your withdrawal request of ${Math.abs(tx.amount)} ETB has been approved and processed.`);
+                        }, 50);
                     }
-                    
-                    tx.key = key; 
-                    transactions.unshift(tx); // Ensure newest transactions always appear on top
                 });
             }
 
-            if (updatedBalanceNeeded) {
+            // Update balance on the UI and database if changed
+            if (balanceChanged) {
                 userDetails.balance = currentBalance;
                 database.ref('users/' + phone + '/balance').set(currentBalance);
             }
 
+            transactions = tempTransactions;
             renderHistory();
             updateBalanceUI();
         });
@@ -1051,6 +1075,7 @@
         };
 
         if (loggedInUserPhone) {
+            console.log("Submitting Deposit Request to Database:", newDepositTx);
             database.ref('users/' + loggedInUserPhone + '/transactions').push(newDepositTx).then(() => {
                 alert(`Your deposit request of ${depAmount} ETB has been submitted. It will remain Pending until approved.`);
                 
@@ -1132,6 +1157,7 @@
         };
 
         if (loggedInUserPhone) {
+            console.log("Submitting Withdrawal Request to Database:", newWithdrawTx);
             database.ref('users/' + loggedInUserPhone).update({
                 balance: userDetails.balance,
                 hasWithdrawnToday: true
@@ -1148,6 +1174,8 @@
     // Bulletproof fallback logic added to prevent UI crashes if any data is corrupted/empty
     function renderHistory() {
         const container = document.getElementById('transactionList');
+        if (!container) return;
+
         if (transactions.length === 0) {
             container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">No logs recorded.</p>`;
             return;
