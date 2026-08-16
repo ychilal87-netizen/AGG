@@ -1585,39 +1585,81 @@
         // =====================================================================
         // RIGOROUS SCIENTIFIC ODDS DISTRIBUTION SYSTEM & COOLDOWN CONTROLS
         // =====================================================================
-        // Read previous crash point for sequential tracking to avoid back-to-back high multipliers
-        let lastCrash = parseFloat(localStorage.getItem('last_crash_point') || '1.5');
-        
-        let forcedLowMultiplier = false;
-        if (lastCrash >= 10.0) {
-            forcedLowMultiplier = true; // Enforce anti-consecutive high multiplier rule
-        }
+        // Safe Gregorian month tracking for 1000x jackpot limit (Once per month) [1]
+        const dateObj = new Date();
+        const currentMonthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+        const last1000xMonth = localStorage.getItem('last_1000x_month') || '';
 
+        // Read dynamic local cooldown counter (Forces low tiers when high values have just crashed) [1]
+        let hCooldown = parseInt(localStorage.getItem('high_mult_cooldown') || '0', 10);
+        if (isNaN(hCooldown)) hCooldown = 0;
+
+        let forcedLowMultiplier = (hCooldown > 0);
         const r = Math.random() * 100;
 
         if (forcedLowMultiplier) {
-            // Force a lower tier crash (Between 1.01x and 2.99x)
-            crashPoint = parseFloat((1.01 + Math.random() * 1.98).toFixed(2));
+            // Decrement active cooldown round counter and commit to state
+            hCooldown--;
+            localStorage.setItem('high_mult_cooldown', hCooldown.toString());
+
+            // 80% Distribution Mode: Under 3.00x (With 90% guaranteed under 1.50x) [1]
+            const tierRoll = Math.random() * 100;
+            if (tierRoll < 90) {
+                // 90% of the forced low rounds are locked between 1.01x and 1.49x [1]
+                crashPoint = parseFloat((1.01 + Math.random() * 0.48).toFixed(2));
+            } else {
+                // 10% of the forced low rounds fall between 1.50x and 2.99x [1]
+                crashPoint = parseFloat((1.50 + Math.random() * 1.49).toFixed(2));
+            }
         } else {
             if (r < 80) {
-                // 80% Distribution Tier: Under 3.00x (Range: 1.01x to 2.99x)
-                crashPoint = parseFloat((1.01 + Math.random() * 1.98).toFixed(2));
+                // Standard 80% Probability bracket (Under 3.00x)
+                // Nested distribution: 90% of these must fall under 1.50x [1]
+                const tierRoll = Math.random() * 100;
+                if (tierRoll < 90) {
+                    // 90% chance (72% overall probability) to drop between 1.01x and 1.49x [1]
+                    crashPoint = parseFloat((1.01 + Math.random() * 0.48).toFixed(2));
+                } else {
+                    // 10% chance (8% overall probability) to drop between 1.50x and 2.99x [1]
+                    crashPoint = parseFloat((1.50 + Math.random() * 1.49).toFixed(2));
+                }
             } else if (r < 90) {
-                // 10% Distribution Tier: 3.00x to 10.00x
+                // 10% Probability bracket: 3.00x to 10.00x [1]
                 crashPoint = parseFloat((3.00 + Math.random() * 7.00).toFixed(2));
             } else if (r < 97) {
-                // 7% Distribution Tier: 10.00x to 20.00x
+                // 7% Probability bracket: 10.00x to 20.00x [1]
                 crashPoint = parseFloat((10.00 + Math.random() * 10.00).toFixed(2));
+                
+                // Set high multiplier cooling cooldown to space out next high crash (4-6 rounds) [1]
+                localStorage.setItem('high_mult_cooldown', (Math.floor(Math.random() * 3) + 4).toString());
             } else if (r < 99) {
-                // 2% Distribution Tier: 20.00x to 100.00x
+                // 2% Probability bracket: 20.00x to 100.00x [1]
                 crashPoint = parseFloat((20.00 + Math.random() * 80.00).toFixed(2));
+                
+                // Set high multiplier cooling cooldown (6-8 rounds) to space out [1]
+                localStorage.setItem('high_mult_cooldown', (Math.floor(Math.random() * 3) + 6).toString());
             } else {
-                // 1% Extreme Peak Tier: Standard 1000.00x sporadic jackpot limit (Once per month probability feel)
-                crashPoint = 1000.00;
+                // 1% Probability bracket: 1000.00x (Jackpot!)
+                // Check monthly constraint securely [1]
+                if (last1000xMonth !== currentMonthKey) {
+                    crashPoint = 1000.00;
+                    localStorage.setItem('last_1000x_month', currentMonthKey);
+                    
+                    // Set maximum cooling cooldown (15 rounds) to securely isolate peak values [1]
+                    localStorage.setItem('high_mult_cooldown', '15');
+                } else {
+                    // Fall back cleanly to under-3x range if already triggered this month [1]
+                    const tierRoll = Math.random() * 100;
+                    if (tierRoll < 90) {
+                        crashPoint = parseFloat((1.01 + Math.random() * 0.48).toFixed(2));
+                    } else {
+                        crashPoint = parseFloat((1.50 + Math.random() * 1.49).toFixed(2));
+                    }
+                }
             }
         }
 
-        // Store generated crash point locally for next round tracking to prevent sequential high values
+        // Store active crash point locally to maintain cooldown evaluation metrics [1]
         localStorage.setItem('last_crash_point', crashPoint.toString());
 
         let startTime = Date.now();
