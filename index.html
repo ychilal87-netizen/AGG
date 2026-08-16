@@ -540,12 +540,6 @@
                 <button onclick="requestWithdrawal()" class="btn">Request Cash Out</button>
             </div>
         </div>
-
-        <!-- Universal Transaction History Logs -->
-        <h4 style="margin: 20px 0 10px 0; font-size: 0.95rem; color: var(--primary-gold);">Transaction History</h4>
-        <div class="transaction-list" id="transactionList">
-            <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">No logs recorded.</p>
-        </div>
     </div>
 
     <!-- ================= 6. PROFILE TAB (REFERRALS & LOGOUT) ================= -->
@@ -581,6 +575,14 @@
             </div>
         </div>
 
+        <!-- Universal Transaction History Logs (Moved to Profile Tab) -->
+        <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
+            <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 8px;">Transaction History</h4>
+            <div class="transaction-list" id="transactionList" style="max-height: 150px; overflow-y: auto;">
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No logs recorded.</p>
+            </div>
+        </div>
+
         <!-- Log Out Trigger -->
         <button onclick="handleLogout()" class="btn btn-secondary">Log Out</button>
     </div>
@@ -611,6 +613,7 @@
     // Global Error Logger for troubleshooting on devices
     window.onerror = function(message, source, lineno, colno, error) {
         console.error("System Error caught:", message, "at", source, "line:", lineno);
+        alert("System Error Alert: " + message + " at line " + lineno); // <--- Added real-time error alert for immediate diagnosis
         return false;
     };
 
@@ -650,17 +653,22 @@
     // =========================================================================
     // Saves detailed Day, Date, Time, Second, and Period (AM/PM) precisely
     function getFormattedDateTime() {
-        const date = new Date();
-        const mm = date.getMonth() + 1;
-        const dd = date.getDate();
-        const yyyy = date.getFullYear();
-        let hh = date.getHours();
-        const ampm = hh >= 12 ? 'PM' : 'AM';
-        hh = hh % 12;
-        hh = hh ? hh : 12; // hour '0' should be '12'
-        const min = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
-        const sec = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
-        return `${mm}/${dd}/${yyyy} ${hh}:${min}:${sec} ${ampm}`;
+        try {
+            const date = new Date();
+            const mm = date.getMonth() + 1;
+            const dd = date.getDate();
+            const yyyy = date.getFullYear();
+            let hh = date.getHours();
+            const ampm = hh >= 12 ? 'PM' : 'AM';
+            hh = hh % 12;
+            hh = hh ? hh : 12; // hour '0' should be '12'
+            const min = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
+            const sec = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+            return `${mm}/${dd}/${yyyy} ${hh}:${min}:${sec} ${ampm}`;
+        } catch (e) {
+            console.error("Date formatting failed:", e);
+            return new Date().toLocaleString();
+        }
     }
 
     // =========================================================================
@@ -668,32 +676,36 @@
     // =========================================================================
     // Captures standard queries, Telegram WebApp params, hash structures & SDK objects
     function autoFillReferral() {
-        let refCode = "";
+        try {
+            let refCode = "";
 
-        // 1. Standard search parameter checks (?ref=123456, ?start=123456, ?startapp=123456, ?tgWebAppStartParam=123456)
-        const urlParams = new URLSearchParams(window.location.search);
-        refCode = urlParams.get('ref') || urlParams.get('start') || urlParams.get('startapp') || urlParams.get('tgWebAppStartParam');
+            // 1. Standard search parameter checks (?ref=123456, ?start=123456, ?startapp=123456, ?tgWebAppStartParam=123456)
+            const urlParams = new URLSearchParams(window.location.search);
+            refCode = urlParams.get('ref') || urlParams.get('start') || urlParams.get('startapp') || urlParams.get('tgWebAppStartParam');
 
-        // 2. Hash parameter checks (e.g. #tgWebAppStartParam=123456 or #ref=123456)
-        if (!refCode && window.location.hash) {
-            const hashClean = window.location.hash.substring(1); 
-            const hashParams = new URLSearchParams(hashClean);
-            refCode = hashParams.get('ref') || hashParams.get('tgWebAppStartParam') || hashParams.get('start_param') || hashParams.get('startapp');
-        }
-
-        // 3. Telegram WebApp SDK internal parameter checks
-        if (!refCode && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-            refCode = window.Telegram.WebApp.initDataUnsafe.start_param;
-        }
-
-        // Apply clean formatting checks
-        const refInput = document.getElementById('regReferral');
-        if (refInput) {
-            if (refCode && String(refCode).trim().length === 6) {
-                refInput.value = String(refCode).trim();
-            } else if (!refInput.value) {
-                refInput.value = ""; // Drop default fallback as requested
+            // 2. Hash parameter checks (e.g. #tgWebAppStartParam=123456 or #ref=123456)
+            if (!refCode && window.location.hash) {
+                const hashClean = window.location.hash.substring(1); 
+                const hashParams = new URLSearchParams(hashClean);
+                refCode = hashParams.get('ref') || hashParams.get('tgWebAppStartParam') || hashParams.get('start_param') || hashParams.get('startapp');
             }
+
+            // 3. Telegram WebApp SDK internal parameter checks
+            if (!refCode && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+                refCode = window.Telegram.WebApp.initDataUnsafe.start_param;
+            }
+
+            // Apply clean formatting checks
+            const refInput = document.getElementById('regReferral');
+            if (refInput) {
+                if (refCode && String(refCode).trim().length === 6) {
+                    refInput.value = String(refCode).trim();
+                } else if (!refInput.value) {
+                    refInput.value = ""; // Drop default fallback as requested
+                }
+            }
+        } catch (e) {
+            console.error("Auto-fill referral failed:", e);
         }
     }
 
@@ -711,128 +723,150 @@
 
     // Realtime Sync Handlers
     function listenToBalance(phone) {
-        database.ref('users/' + phone + '/balance').off();
-        database.ref('users/' + phone + '/balance').on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                userDetails.balance = parseFloat(snapshot.val());
-                updateBalanceUI();
-            }
-        });
+        try {
+            database.ref('users/' + phone + '/balance').off();
+            database.ref('users/' + phone + '/balance').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    userDetails.balance = parseFloat(snapshot.val());
+                    updateBalanceUI();
+                }
+            });
+        } catch (e) {
+            console.error("Balance synchronization failed:", e);
+        }
     }
 
     // Listens to transaction node, processes and credits pending deposits automatically upon successful state
     // Also fires the 8% commission to the referrer automatically on deposit approval
     function listenToTransactions(phone) {
         console.log("Firebase Transactions Listener activated for:", phone);
-        database.ref('users/' + phone + '/transactions').off();
-        database.ref('users/' + phone + '/transactions').on('value', (snapshot) => {
-            const data = snapshot.val();
-            console.log("Transactions loaded:", data);
-            
-            const tempTransactions = [];
-            let currentBalance = parseFloat(userDetails.balance || 0);
-            let balanceChanged = false;
-
-            if (data) {
-                // We use a clean loop to populate the transactions list first
-                Object.entries(data).forEach(([key, tx]) => {
-                    if (!tx) return;
+        try {
+            database.ref('users/' + phone + '/transactions').off();
+            database.ref('users/' + phone + '/transactions').on('value', (snapshot) => {
+                try {
+                    const data = snapshot.val();
+                    console.log("Transactions loaded:", data);
                     
-                    const item = { ...tx, key: key };
-                    tempTransactions.unshift(item); // Newest on top
+                    const tempTransactions = [];
+                    let currentBalance = parseFloat(userDetails.balance || 0);
+                    let balanceChanged = false;
 
-                    // If a deposit was approved but not yet credited in this client session
-                    // Safe for both Admin App and Manual Console edits
-                    if (tx.type === "deposit" && tx.status === "Successful") {
-                        // 1. Credit balance and commission if not already done
-                        if (tx.credited === false) {
-                            currentBalance += parseFloat(tx.amount || 0);
-                            tx.credited = true;
-                            balanceChanged = true;
+                    if (data) {
+                        // We use a clean loop to populate the transactions list first
+                        Object.entries(data).forEach(([key, tx]) => {
+                            if (!tx) return;
+                            
+                            const item = { ...tx, key: key };
+                            tempTransactions.unshift(item); // Newest on top
 
-                            // Perform DB updates in next tick to avoid blocking the current render pipeline
-                            setTimeout(() => {
-                                database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
-                            }, 50);
+                            // If a deposit was approved but not yet credited in this client session
+                            // Safe for both Admin App and Manual Console edits
+                            if (tx.type === "deposit" && tx.status === "Successful") {
+                                // 1. Credit balance and commission if not already done
+                                if (tx.credited === false) {
+                                    currentBalance += parseFloat(tx.amount || 0);
+                                    tx.credited = true;
+                                    balanceChanged = true;
 
-                            // Log referral commission to referrer
-                            if (userDetails.referredBy) {
-                                const commission = parseFloat(tx.amount || 0) * 0.08;
-                                const formattedDate = getFormattedDateTime();
+                                    // Perform DB updates in next tick to avoid blocking the current render pipeline
+                                    setTimeout(() => {
+                                        database.ref('users/' + phone + '/transactions/' + key).update({ credited: true });
+                                    }, 50);
 
-                                database.ref('users/' + userDetails.referredBy + '/balance').transaction((bal) => {
-                                    return (bal || 0) + commission;
-                                });
+                                    // Log referral commission to referrer
+                                    if (userDetails.referredBy) {
+                                        const commission = parseFloat(tx.amount || 0) * 0.08;
+                                        const formattedDate = getFormattedDateTime();
 
-                                database.ref('users/' + userDetails.referredBy + '/transactions').push({
-                                    type: "referral_commission",
-                                    desc: `Referral Commission (From ID: ${userDetails.phone.slice(-6)})`,
-                                    amount: commission,
-                                    status: "Successful",
-                                    time: formattedDate,
-                                    icon: "🎁"
-                                });
+                                        database.ref('users/' + userDetails.referredBy + '/balance').transaction((bal) => {
+                                            return (bal || 0) + commission;
+                                        });
+
+                                        database.ref('users/' + userDetails.referredBy + '/transactions').push({
+                                            type: "referral_commission",
+                                            desc: `Referral Commission (From ID: ${userDetails.phone.slice(-6)})`,
+                                            amount: commission,
+                                            status: "Successful",
+                                            time: formattedDate,
+                                            icon: "🎁"
+                                        });
+                                    }
+                                }
+
+                                // 2. Show real-time alert notification if not already done
+                                if (tx.notified !== true) {
+                                    setTimeout(() => {
+                                        database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
+                                        alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
+                                    }, 100);
+                                }
                             }
-                        }
 
-                        // 2. Show real-time alert notification if not already done
-                        if (tx.notified !== true) {
-                            setTimeout(() => {
-                                database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
-                                alert(`Success! Your deposit of ${tx.amount} ETB has been approved and added to your balance.`);
-                            }, 100);
-                        }
+                            // If a withdrawal was approved but user hasn't been notified yet
+                            if (tx.type === "withdrawal" && tx.status === "Successful" && tx.notified !== true) {
+                                setTimeout(() => {
+                                    database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
+                                    alert(`Success! Your withdrawal request of ${Math.abs(tx.amount)} ETB has been approved and processed.`);
+                                }, 50);
+                            }
+                        });
                     }
 
-                    // If a withdrawal was approved but user hasn't been notified yet
-                    if (tx.type === "withdrawal" && tx.status === "Successful" && tx.notified !== true) {
-                        setTimeout(() => {
-                            database.ref('users/' + phone + '/transactions/' + key).update({ notified: true });
-                            alert(`Success! Your withdrawal request of ${Math.abs(tx.amount)} ETB has been approved and processed.`);
-                        }, 50);
+                    // Update balance on the UI and database if changed
+                    if (balanceChanged) {
+                        userDetails.balance = currentBalance;
+                        database.ref('users/' + phone + '/balance').set(currentBalance);
                     }
-                });
-            }
 
-            // Update balance on the UI and database if changed
-            if (balanceChanged) {
-                userDetails.balance = currentBalance;
-                database.ref('users/' + phone + '/balance').set(currentBalance);
-            }
-
-            transactions = tempTransactions;
-            renderHistory();
-            updateBalanceUI();
-        });
+                    transactions = tempTransactions;
+                    renderHistory();
+                    updateBalanceUI();
+                } catch (innerError) {
+                    console.error("Error inside transaction snapshot processing:", innerError);
+                    alert("Sync Loop Error: " + innerError.message);
+                }
+            });
+        } catch (e) {
+            console.error("Transactions database listener attachment failed:", e);
+            alert("Database Listener Error: " + e.message);
+        }
     }
 
     // Listens to referred users list under logged in user's node in real-time
     // Lists referred users according to their 6-digit ID Code
     function listenToReferredUsers(phone) {
-        database.ref('users/' + phone + '/referredUsers').off();
-        database.ref('users/' + phone + '/referredUsers').on('value', (snapshot) => {
-            const listEl = document.getElementById('referredUsersList');
-            if (snapshot.exists()) {
-                const users = snapshot.val();
-                listEl.innerHTML = Object.values(users).map(u => {
-                    const idCode = u.phone ? u.phone.slice(-6) : 'N/A';
-                    return `
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1edd9; padding: 6px 0;">
-                            <span>👤 <strong>${u.name}</strong></span>
-                            <span style="color: var(--primary-gold); font-weight: bold;">ID: ${idCode}</span>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                listEl.innerHTML = `<p style="text-align: center; color: var(--text-muted);">No referred users yet.</p>`;
-            }
-        });
+        try {
+            database.ref('users/' + phone + '/referredUsers').off();
+            database.ref('users/' + phone + '/referredUsers').on('value', (snapshot) => {
+                const listEl = document.getElementById('referredUsersList');
+                if (snapshot.exists()) {
+                    const users = snapshot.val();
+                    listEl.innerHTML = Object.values(users).map(u => {
+                        const idCode = u.phone ? u.phone.slice(-6) : 'N/A';
+                        return `
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1edd9; padding: 6px 0;">
+                                <span>👤 <strong>${u.name}</strong></span>
+                                <span style="color: var(--primary-gold); font-weight: bold;">ID: ${idCode}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    listEl.innerHTML = `<p style="text-align: center; color: var(--text-muted);">No referred users yet.</p>`;
+                }
+            });
+        } catch (e) {
+            console.error("Referred users database listener failed:", e);
+        }
     }
 
     function syncUserBalance() {
-        if (!loggedInUserPhone) return;
-        database.ref('users/' + loggedInUserPhone + '/balance').set(userDetails.balance);
-        updateBalanceUI();
+        try {
+            if (!loggedInUserPhone) return;
+            database.ref('users/' + loggedInUserPhone + '/balance').set(userDetails.balance);
+            updateBalanceUI();
+        } catch (e) {
+            console.error("Balance sync write failed:", e);
+        }
     }
 
     // Navigation controller
@@ -1031,6 +1065,54 @@
         showScreen('screenLogin');
     }
 
+    // Renders history list with pending and successful transaction status colors
+    // Structured beautifully side-by-side inside the item layout with clear high-contrast details
+    // Bulletproof fallback logic added to prevent UI crashes if any data is corrupted/empty
+    function renderHistory() {
+        try {
+            const container = document.getElementById('transactionList');
+            if (!container) return;
+
+            if (transactions.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">No logs recorded.</p>`;
+                return;
+            }
+
+            container.innerHTML = transactions.map(item => {
+                if (!item) return '';
+
+                let statusBadge = "";
+                if (item.status) {
+                    const badgeColor = item.status === "Successful" ? "var(--accent-green)" : "#e67e22";
+                    statusBadge = `<span style="font-size: 0.65rem; color: ${badgeColor}; font-weight: bold; border: 1px solid ${badgeColor}; padding: 1px 4px; border-radius: 4px; margin-left: 5px;">${item.status}</span>`;
+                }
+
+                const amountVal = item.amount !== undefined && item.amount !== null ? item.amount : 0;
+                const isNegative = typeof amountVal === 'number' ? amountVal < 0 : String(amountVal).startsWith('-');
+                const displayAmount = typeof amountVal === 'number' ? Math.abs(amountVal).toFixed(2) : parseFloat(String(amountVal).replace(/[^0-9.]/g, '') || '0').toFixed(2);
+                const amountPrefix = isNegative ? "-" : "+";
+                const amountColor = isNegative ? "#ff4757" : "var(--accent-green)";
+
+                return `
+                    <div class="transaction-item" style="display: flex; justify-content: space-between; align-items: center; background-color: #faf8f5; border: 1px solid var(--border-gold); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.8rem;">
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <span style="font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 4px;">
+                                ${item.icon || '⏱️'} ${item.desc || 'Transaction'} ${statusBadge}
+                            </span>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">${item.time || 'N/A'}</span>
+                        </div>
+                        <div style="font-weight: bold; font-size: 0.85rem; color: ${amountColor}; text-align: right;">
+                            ${amountPrefix}${displayAmount} ETB
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (renderError) {
+            console.error("Rendering History panel failed:", renderError);
+            alert("History UI Error: " + renderError.message);
+        }
+    }
+
     function updateBalanceUI() {
         document.getElementById('userBalance').innerText = userDetails.balance.toFixed(2);
     }
@@ -1049,167 +1131,6 @@
             document.getElementById('btnTabWith').classList.add('active');
             document.getElementById('sectionWithdraw').classList.add('active');
         }
-    }
-
-    // Submits deposit to pending log node on Firebase RTDB waiting for external manual action
-    function handleDepositSubmit(event) {
-        event.preventDefault();
-        const depAmount = parseFloat(document.getElementById('depAmount').value);
-        const ftVal = document.getElementById('depFT').value;
-        
-        if (isNaN(depAmount) || depAmount <= 0) {
-            alert("Please enter a valid deposit amount.");
-            return;
-        }
-
-        const formattedDate = getFormattedDateTime();
-
-        const newDepositTx = {
-            type: "deposit",
-            desc: "Deposit (FT: " + ftVal + ")",
-            amount: depAmount,
-            status: "Pending", // Stays pending until external app sets this field to "Successful"
-            credited: false,
-            time: formattedDate,
-            icon: "⏱️"
-        };
-
-        if (loggedInUserPhone) {
-            console.log("Submitting Deposit Request to Database:", newDepositTx);
-            database.ref('users/' + loggedInUserPhone + '/transactions').push(newDepositTx).then(() => {
-                alert(`Your deposit request of ${depAmount} ETB has been submitted. It will remain Pending until approved.`);
-                
-                document.getElementById('depAmount').value = "";
-                document.getElementById('depFT').value = "";
-                document.getElementById('depImage').value = "";
-            }).catch((error) => {
-                alert("Failed to submit deposit: " + error.message);
-            });
-        } else {
-            alert("Please login first.");
-        }
-    }
-
-    // Secure Bank profile save
-    function handleWithdrawSave(event) {
-        event.preventDefault();
-        const withName = document.getElementById('withName').value;
-        const withAccount = document.getElementById('withAccount').value;
-
-        userDetails.withdrawName = withName;
-        userDetails.withdrawAccount = withAccount;
-        userDetails.withdrawSaved = true;
-
-        document.getElementById('withName').disabled = true;
-        document.getElementById('withAccount').disabled = true;
-        document.getElementById('btnSaveWithdraw').style.display = 'none';
-
-        const banner = document.getElementById('withdrawSavedMsg');
-        banner.innerText = `Saved Account: ${withName} (${withAccount}). Edits are restricted within the app.`;
-        banner.style.display = 'block';
-
-        document.getElementById('actualWithdrawSection').style.display = 'block';
-
-        if (loggedInUserPhone) {
-            database.ref('users/' + loggedInUserPhone).update({
-                withdrawName: withName,
-                withdrawAccount: withAccount,
-                withdrawSaved: true
-            });
-        }
-    }
-
-    // Withdrawal process with strict 1x daily limit and 200 - 5000 ETB range
-    function requestWithdrawal() {
-        if (userDetails.hasWithdrawnToday) {
-            alert("Limit reached: You are allowed only 1 withdrawal request per day.");
-            return;
-        }
-
-        const amount = parseFloat(document.getElementById('withAmount').value);
-        if (isNaN(amount)) {
-            alert("Please enter a valid amount.");
-            return;
-        }
-
-        if (amount < 200 || amount > 5000) {
-            alert("Transaction Denied: Withdrawal must be between 200 ETB and 5000 ETB.");
-            return;
-        }
-
-        if (amount > userDetails.balance) {
-            alert("Insufficient funds in your account.");
-            return;
-        }
-
-        userDetails.balance -= amount;
-        userDetails.hasWithdrawnToday = true; 
-        
-        const formattedDate = getFormattedDateTime();
-
-        const newWithdrawTx = {
-            type: "withdrawal",
-            desc: "Withdrawal (CBE/Telebirr)",
-            amount: -amount,
-            status: "Pending", // Withdrawal starts as pending waiting for external processing
-            time: formattedDate,
-            icon: "💸"
-        };
-
-        if (loggedInUserPhone) {
-            console.log("Submitting Withdrawal Request to Database:", newWithdrawTx);
-            database.ref('users/' + loggedInUserPhone).update({
-                balance: userDetails.balance,
-                hasWithdrawnToday: true
-            }).then(() => {
-                database.ref('users/' + loggedInUserPhone + '/transactions').push(newWithdrawTx);
-                alert(`Withdrawal request of ${amount} ETB has been submitted and is currently Pending.`);
-                document.getElementById('withAmount').value = "";
-            });
-        }
-    }
-
-    // Renders history list with pending and successful transaction status colors
-    // Structured beautifully side-by-side inside the item layout with clear high-contrast details
-    // Bulletproof fallback logic added to prevent UI crashes if any data is corrupted/empty
-    function renderHistory() {
-        const container = document.getElementById('transactionList');
-        if (!container) return;
-
-        if (transactions.length === 0) {
-            container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">No logs recorded.</p>`;
-            return;
-        }
-
-        container.innerHTML = transactions.map(item => {
-            if (!item) return '';
-
-            let statusBadge = "";
-            if (item.status) {
-                const badgeColor = item.status === "Successful" ? "var(--accent-green)" : "#e67e22";
-                statusBadge = `<span style="font-size: 0.65rem; color: ${badgeColor}; font-weight: bold; border: 1px solid ${badgeColor}; padding: 1px 4px; border-radius: 4px; margin-left: 5px;">${item.status}</span>`;
-            }
-
-            const amountVal = item.amount !== undefined && item.amount !== null ? item.amount : 0;
-            const isNegative = typeof amountVal === 'number' ? amountVal < 0 : String(amountVal).startsWith('-');
-            const displayAmount = typeof amountVal === 'number' ? Math.abs(amountVal).toFixed(2) : parseFloat(String(amountVal).replace(/[^0-9.]/g, '') || '0').toFixed(2);
-            const amountPrefix = isNegative ? "-" : "+";
-            const amountColor = isNegative ? "#ff4757" : "var(--accent-green)";
-
-            return `
-                <div class="transaction-item" style="display: flex; justify-content: space-between; align-items: center; background-color: #faf8f5; border: 1px solid var(--border-gold); padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.8rem;">
-                    <div style="display: flex; flex-direction: column; gap: 3px;">
-                        <span style="font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 4px;">
-                            ${item.icon || '⏱️'} ${item.desc || 'Transaction'} ${statusBadge}
-                        </span>
-                        <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">${item.time || 'N/A'}</span>
-                    </div>
-                    <div style="font-weight: bold; font-size: 0.85rem; color: ${amountColor}; text-align: right;">
-                        ${amountPrefix}${displayAmount} ETB
-                    </div>
-                </div>
-            `;
-        }).join('');
     }
 
     // Copy Invite Links
@@ -1356,7 +1277,7 @@
                 }
             }
 
-            // Animate SVG Plane along diagonal path
+            // An animate SVG Plane along diagonal path
             const plane = document.getElementById('plane');
             const xPos = Math.min(elapsed * 28, 260);
             const yPos = -Math.min(elapsed * 16, 120);
