@@ -331,6 +331,33 @@
 
 <div class="phone-container">
 
+    <!-- ================= FLOATING TELEGRAM SERVICE BUTTON ================= -->
+    <!-- Green background, female support representative icon, draggable, links to https://t.me/AGGservice -->
+    <a href="https://t.me/AGGservice" target="_blank" id="floatingService" style="
+        display: none; 
+        position: absolute; 
+        bottom: 80px; 
+        right: 20px; 
+        background-color: #27ae60; 
+        color: white; 
+        text-decoration: none; 
+        padding: 10px 16px; 
+        border-radius: 50px; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25); 
+        z-index: 1001; 
+        font-weight: bold; 
+        align-items: center; 
+        gap: 8px; 
+        font-size: 0.85rem;
+        border: 2px solid #ffffff;
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+    ">
+        <span style="font-size: 1.1rem;">👩‍💼</span>
+        <span>SERVICE</span>
+    </a>
+
     <!-- Universal Top Header -->
     <div class="app-header" id="appHeader" style="display: none;">
         <h1>AVIATOR GOLD</h1>
@@ -545,7 +572,7 @@
             <p id="copyMsg" style="font-size: 0.75rem; color: var(--accent-green); display: none;">Link copied to clipboard!</p>
         </div>
 
-        <!-- Referred Users List as requested with Name and ID -->
+        <!-- Referred Users List structured with Name and ID -->
         <div style="background-color: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-gold); margin-bottom: 15px;">
             <h4 style="color: var(--primary-gold); font-size: 0.95rem; margin-bottom: 8px;">Referred Users</h4>
             <div id="referredUsersList" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem; color: var(--text-dark);">
@@ -611,8 +638,8 @@
 
     let transactions = [];
 
-    // Auto load referral code from URL parameter on DOM load. 
-    // If none exists, pre-fills with system default "123456" as requested.
+    // Auto load referral code from URL parameter on DOM load.
+    // Fixed: Does not populate default "123456" anymore. Only populates the 6-digit code of the referrer from url.
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const refCode = urlParams.get('ref');
@@ -621,7 +648,7 @@
             if (refCode && refCode.length === 6) {
                 refInput.value = refCode;
             } else {
-                refInput.value = "123456"; // Default system referral code
+                refInput.value = ""; 
             }
         }
     });
@@ -672,7 +699,7 @@
                             // Logs commission transaction history under referrer's profile
                             database.ref('users/' + userDetails.referredBy + '/transactions').push({
                                 type: "referral_commission",
-                                desc: `Referral Commission (From ID: ${userDetails.phone})`,
+                                desc: `Referral Commission (From ID: ${userDetails.phone.slice(-6)})`,
                                 amount: commission,
                                 status: "Successful",
                                 time: formattedDate,
@@ -699,18 +726,22 @@
     }
 
     // Listens to referred users list under logged in user's node in real-time
+    // Fixed: Lists referred users according to their 6-digit ID Code
     function listenToReferredUsers(phone) {
         database.ref('users/' + phone + '/referredUsers').off();
         database.ref('users/' + phone + '/referredUsers').on('value', (snapshot) => {
             const listEl = document.getElementById('referredUsersList');
             if (snapshot.exists()) {
                 const users = snapshot.val();
-                listEl.innerHTML = Object.values(users).map(u => `
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1edd9; padding: 6px 0;">
-                        <span>👤 <strong>${u.name}</strong></span>
-                        <span style="color: var(--text-muted);">ID: ${u.phone}</span>
-                    </div>
-                `).join('');
+                listEl.innerHTML = Object.values(users).map(u => {
+                    const idCode = u.phone ? u.phone.slice(-6) : 'N/A';
+                    return `
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1edd9; padding: 6px 0;">
+                            <span>👤 <strong>${u.name}</strong></span>
+                            <span style="color: var(--primary-gold); font-weight: bold;">ID: ${idCode}</span>
+                        </div>
+                    `;
+                }).join('');
             } else {
                 listEl.innerHTML = `<p style="text-align: center; color: var(--text-muted);">No referred users yet.</p>`;
             }
@@ -810,9 +841,6 @@
                                 return;
                             }
                             executeRegistration(referrerPhone);
-                        } else if (refCode === "123456") {
-                            // System default code bypass allowed if DB refCodes doesn't exist yet
-                            executeRegistration("");
                         } else {
                             alert('Invalid Referral Code! You must enter a valid 6-digit referral code to register.');
                         }
@@ -877,6 +905,9 @@
                         document.getElementById('actualWithdrawSection').style.display = 'none';
                     }
 
+                    // Display Floating Telegram Service Button after login
+                    document.getElementById('floatingService').style.display = 'flex';
+
                     showScreen('tabHome');
                     const homeNavItem = document.querySelector('.nav-item');
                     switchTab('tabHome', homeNavItem);
@@ -912,6 +943,10 @@
         transactions = [];
         document.getElementById('loginPassword').value = '';
         renderHistory();
+
+        // Hide Floating Telegram Service Button on Logout
+        document.getElementById('floatingService').style.display = 'none';
+
         showScreen('screenLogin');
     }
 
@@ -1302,6 +1337,72 @@
     function varColor(name) {
         return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     }
+
+    // ========================================================
+    // DRAGGABLE/MOVABLE FUNCTIONALITY FOR TELEGRAM SERVICE BUTTON
+    // ========================================================
+    const dragEl = document.getElementById('floatingService');
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+
+    dragEl.addEventListener('mousedown', dragStart);
+    dragEl.addEventListener('touchstart', dragStart, { passive: true });
+
+    function dragStart(e) {
+        isDragging = false; 
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX;
+        startY = clientY;
+        initialX = dragEl.offsetLeft;
+        initialY = dragEl.offsetTop;
+
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('touchmove', dragMove, { passive: false });
+        document.addEventListener('touchend', dragEnd);
+    }
+
+    function dragMove(e) {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+        
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+            isDragging = true;
+            if (e.cancelable) e.preventDefault();
+        }
+
+        let newLeft = initialX + dx;
+        let newTop = initialY + dy;
+
+        // Constraint adjustments within phone-container boundary
+        const container = document.querySelector('.phone-container');
+        const maxLeft = container.clientWidth - dragEl.offsetWidth - 10;
+        const maxTop = container.clientHeight - dragEl.offsetHeight - 10;
+
+        newLeft = Math.max(10, Math.min(maxLeft, newLeft));
+        newTop = Math.max(10, Math.min(maxTop, newTop));
+
+        dragEl.style.left = newLeft + 'px';
+        dragEl.style.top = newTop + 'px';
+        dragEl.style.bottom = 'auto';
+        dragEl.style.right = 'auto';
+    }
+
+    function dragEnd(e) {
+        document.removeEventListener('mousemove', dragMove);
+        document.removeEventListener('mouseup', dragEnd);
+        document.removeEventListener('touchmove', dragMove);
+        document.removeEventListener('touchend', dragEnd);
+    }
+
+    dragEl.addEventListener('click', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+        }
+    });
 </script>
 
 </body>
