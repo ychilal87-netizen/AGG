@@ -362,6 +362,7 @@
 
     <!-- ================= FLOATING TELEGRAM CUSTOMER SUPPORT BUTTON ================= -->
     <!-- Green background, official look, draggable, links to support service handle (Not the channel) -->
+    <!-- Guaranteed hidden on Register or Login screen initially -->
     <a href="https://t.me/AGGservice" target="_blank" id="floatingService" style="
         display: none; 
         position: absolute; 
@@ -515,10 +516,11 @@
                 <path id="trajectoryPath" d="" fill="none" stroke="#56ccf2" stroke-width="3" stroke-dasharray="4" style="filter: drop-shadow(0 0 6px #56ccf2); opacity: 0.8;"/>
             </svg>
 
-            <!-- Highly Stylized Supersonic Combat Jet Vector SVG -->
+            <!-- Genuine Fighter Jet Aircraft (No Star shape!) -->
             <div class="plane-wrapper" id="plane">
-                <svg class="plane-svg" viewBox="0 0 24 24">
-                    <path d="M12,2L14.5,9H21L16,13L18,20L12,16L6,20L8,13L3,9H9.5L12,2Z" fill="#56ccf2" style="filter: drop-shadow(0 0 8px #56ccf2);"/>
+                <svg class="plane-svg" viewBox="0 0 24 24" style="transform: rotate(45deg);">
+                    <!-- High-fidelity combat fighter aircraft silhouette -->
+                    <path d="M12 2 L14 7 L14 13 L21 15 L21 17 L14 16 L14 21 L17 23 L17 24 L12 22 L7 24 L7 23 L10 21 L10 16 L3 17 L3 15 L10 13 L10 7 Z" fill="#56ccf2" style="filter: drop-shadow(0 0 8px #56ccf2);"/>
                 </svg>
             </div>
             
@@ -1490,115 +1492,63 @@
     }
 
     // =========================================================================
-    // REAL-TIME EXPONENTIAL AVIATOR CALCULATOR WITH DYNAMIC HUD/SOUNDS
+    // CONTINUOUS AUTOMATED LIVE MULTIPLIER ENGINE (AUTONOMOUS GAME LOOP)
     // =========================================================================
-    let isPlaying = false;
-    let isCrashed = false;
-    let isCashedOut = false;
-    let isCountingDown = false;
+    let gameState = "PREPARATION"; // States: "PREPARATION", "FLIGHT", "CRASHED"
+    let preparationTime = 6; // Countdown timer between flights
     let liveMultiplier = 1.00;
-    let gameInterval = null;
     let crashPoint = 1.00;
+    let gameInterval = null;
     let currentBetAmount = 0;
+    let userHasBetInCurrentRound = false;
+    let userCashedOutInCurrentRound = false;
 
-    function handleGameAction() {
-        const btn = document.getElementById('gameActionBtn');
-        const betInput = document.getElementById('betAmount');
+    // Run the automated cycle globally as soon as the interface starts [1]
+    window.addEventListener('load', () => {
+        autoFillReferral();
+        startPreparationCycle(); // Initiate loop immediately
+    });
 
-        if (!isPlaying && !isCountingDown) {
-            // Verify Stake (Strict boundaries: 4 ETB - 4000 ETB) [1]
-            currentBetAmount = parseFloat(betInput.value);
-            if (isNaN(currentBetAmount) || currentBetAmount < 4 || currentBetAmount > 4000) {
-                alert("የመጫወቻው መጠን ከ 4 እስከ 4000 ETB መሆን አለበት!");
-                return;
-            }
-            if (currentBetAmount > userDetails.balance) {
-                alert("Insufficient funds to place this bet!");
-                return;
-            }
+    function startPreparationCycle() {
+        gameState = "PREPARATION";
+        userHasBetInCurrentRound = false;
+        userCashedOutInCurrentRound = false;
 
-            // Deduct Stake
-            userDetails.balance -= currentBetAmount;
-            syncUserBalance();
+        // Reset elements of previous round [1]
+        document.getElementById('crashMessage').style.display = 'none';
+        document.getElementById('liveMultiplier').style.display = 'block'; 
+        document.getElementById('liveMultiplier').style.color = '#56ccf2';
+        document.getElementById('trajectoryPath').setAttribute('d', '');
+        document.getElementById('plane').style.display = 'none';
 
-            // Set state to Countdown Phase (Manual start by customer interaction) [1]
-            isCountingDown = true;
-            betInput.disabled = true;
+        let countdown = 6; // 6-second countdown
+        document.getElementById('liveMultiplier').innerText = `Next round in ${countdown}s...`;
+        updateGameActionButtonUI();
+
+        if (gameInterval) clearInterval(gameInterval);
+
+        // Standard 1-second countdown cycle for bets preparation [1]
+        gameInterval = setInterval(() => {
+            countdown--;
+            document.getElementById('liveMultiplier').innerText = `Next round in ${countdown}s...`;
             
-            // Clear prior trails and styles [1]
-            document.getElementById('crashMessage').style.display = 'none';
-            document.getElementById('liveMultiplier').style.display = 'block'; 
-            document.getElementById('liveMultiplier').style.color = '#56ccf2';
-            document.getElementById('trajectoryPath').setAttribute('d', '');
-
-            // Play prep tick sound
-            playFlightStartSound();
-
-            // 3-Second Preparation Countdown
-            let countdownValue = 3;
-            btn.innerHTML = `BET PLACED`;
-            btn.disabled = true;
-            btn.style.background = '#faf8f5';
-            btn.style.color = varColor('--text-muted');
-
-            let countdownInterval = setInterval(() => {
-                document.getElementById('liveMultiplier').innerText = `Starting in ${countdownValue}...`;
-                countdownValue--;
-
-                if (countdownValue < 0) {
-                    clearInterval(countdownInterval);
-                    isCountingDown = false;
-                    startFlight();
-                }
-            }, 1000);
-        } else if (isPlaying && !isCashedOut) {
-            // User Exits (WINS)
-            isCashedOut = true;
-            const wonAmount = currentBetAmount * liveMultiplier;
-            userDetails.balance += wonAmount;
-            syncUserBalance();
-
-            // Trigger Win sound arpeggio
-            playWinChimeSound();
-
-            btn.innerHTML = `WON +${wonAmount.toFixed(2)} ETB`;
-            btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
-            btn.style.color = 'white';
-            document.getElementById('liveMultiplier').style.color = 'var(--accent-green)';
-
-            const formattedDate = getFormattedDateTime();
-
-            const winTx = {
-                type: "win",
-                desc: `Aviator Won @ ${liveMultiplier.toFixed(2)}x`,
-                amount: wonAmount,
-                status: "Successful",
-                time: formattedDate,
-                icon: "📈"
-            };
-
-            if (loggedInUserPhone) {
-                database.ref('users/' + loggedInUserPhone + '/transactions').push(winTx);
+            if (countdown <= 0) {
+                clearInterval(gameInterval);
+                startFlightCycle();
             }
-            addHistoryBadge(liveMultiplier.toFixed(2) + "x");
-        }
+        }, 1000);
     }
 
-    function startFlight() {
-        isPlaying = true;
-        isCrashed = false;
-        isCashedOut = false;
-        liveMultiplier = 1.00;
+    function startFlightCycle() {
+        gameState = "FLIGHT";
+        updateGameActionButtonUI();
 
-        // Trigger loopable hum engine sound
+        // Audio synthesizer triggers [1]
+        playFlightStartSound();
         startJetEngineSound();
 
-        const btn = document.getElementById('gameActionBtn');
-        btn.disabled = false;
-        btn.style.background = 'linear-gradient(135deg, #ff4757, #ff6b81)';
-        btn.style.color = 'white';
-        // Bold high-contrast glowing live winnings
-        btn.innerHTML = `CASH OUT <br><span style="font-size:1.1rem; color:#2ecc71; font-weight:800; display:block; margin-top:4px; text-shadow:0 0 10px rgba(46,204,113,0.5);" id="liveWinnings">${currentBetAmount.toFixed(2)} ETB</span>`;
+        document.getElementById('plane').style.display = 'block';
+        document.getElementById('plane').style.transform = 'translate(0px, 0px)';
 
         // Mathematical Exponential Random Crash Point Generator
         const r = Math.random();
@@ -1612,12 +1562,8 @@
             crashPoint = 7.50 + (Math.random() * 20.0); 
         }
 
-        document.getElementById('plane').style.display = 'block';
-        document.getElementById('plane').style.transform = 'translate(0px, 0px)';
-
         let startTime = Date.now();
         
-        // Exact Exponential growth cycle: Multiplier = 1.00 * (1.12 ^ elapsed)
         gameInterval = setInterval(() => {
             let elapsed = (Date.now() - startTime) / 1000; // in seconds
             
@@ -1629,15 +1575,10 @@
             // Sync engine pitch with current multiplier value
             updateJetEnginePitch(liveMultiplier);
 
-            if (!isCashedOut) {
-                const currentWin = currentBetAmount * liveMultiplier;
-                const winningsEl = document.getElementById('liveWinnings');
-                if (winningsEl) {
-                    winningsEl.innerText = currentWin.toFixed(2) + " ETB";
-                }
-            }
+            // Dynamically update cashout values inside the button
+            updateGameActionButtonUI();
 
-            // Animate Fighter Jet along curved supersonic path matching reference image HUD
+            // Animate Fighter Jet along trajectory trail [1]
             const plane = document.getElementById('plane');
             const trajPath = document.getElementById('trajectoryPath');
             
@@ -1646,8 +1587,7 @@
             
             plane.style.transform = `translate(${planeX}px, ${planeY}px)`;
 
-            // Dynamically paint the glowing blue trace trail path behind jet [1]
-            // Arena height is 220px. Adjust points to start relative to bottom left corner.
+            // Trajectory trail painting
             const startX = 45;
             const startY = 185;
             const currentX = startX + planeX;
@@ -1656,39 +1596,31 @@
 
             // Trigger Crash Event
             if (liveMultiplier >= crashPoint) {
-                triggerCrash();
+                triggerCrashCycle();
             }
 
-        }, 50); // Smooth updates (50ms cycles)
+        }, 50); // Smooth update ticks (50ms)
     }
 
-    function triggerCrash() {
+    function triggerCrashCycle() {
         clearInterval(gameInterval);
-        isCrashed = true;
-        isPlaying = false;
+        gameState = "CRASHED";
         
-        // Fire crash sound effect
+        // Fire crash explosion sound effect [1]
         playExplosionCrashSound();
 
         document.getElementById('plane').style.display = 'none';
         
-        // Hide multiplier text completely as requested upon crash [1]
+        // Hide the multiplier text completely upon crash [1]
         document.getElementById('liveMultiplier').style.display = 'none';
 
         const msg = document.getElementById('crashMessage');
         msg.innerText = `FLEW AWAY @ ${liveMultiplier.toFixed(2)}x`;
         msg.style.display = 'block';
 
-        const btn = document.getElementById('gameActionBtn');
-        btn.innerHTML = `BET`;
-        btn.disabled = false;
-        btn.style.background = 'linear-gradient(135deg, var(--accent-gold), var(--primary-gold))';
-        btn.style.color = '#ffffff';
-        document.getElementById('betAmount').disabled = false;
-
-        if (!isCashedOut) {
+        // Check if player participated and didn't cash out (Loss processing) [1]
+        if (userHasBetInCurrentRound && !userCashedOutInCurrentRound) {
             const formattedDate = getFormattedDateTime();
-
             const lossTx = {
                 type: "loss",
                 desc: `Aviator Crashed @ ${liveMultiplier.toFixed(2)}x`,
@@ -1702,11 +1634,146 @@
                 database.ref('users/' + loggedInUserPhone + '/transactions').push(lossTx);
             }
             addHistoryBadge(liveMultiplier.toFixed(2) + "x");
+        } else {
+            // Did not bet, or already cashed out successfully
+            addHistoryBadge(liveMultiplier.toFixed(2) + "x");
+        }
+
+        updateGameActionButtonUI();
+
+        // Automatically prepare the next round after 3 seconds [1]
+        setTimeout(() => {
+            startPreparationCycle();
+        }, 3000);
+    }
+
+    function handleGameAction() {
+        const betInput = document.getElementById('betAmount');
+
+        if (gameState === "PREPARATION") {
+            if (userHasBetInCurrentRound) return; // Bet already locked in
+
+            currentBetAmount = parseFloat(betInput.value);
+            if (isNaN(currentBetAmount) || currentBetAmount < 4 || currentBetAmount > 4000) {
+                alert("የመጫወቻው መጠን ከ 4 እስከ 4000 ETB መሆን አለበት!");
+                return;
+            }
+            if (currentBetAmount > userDetails.balance) {
+                alert("Insufficient funds to place this bet!");
+                return;
+            }
+
+            // Deduct Stake immediately
+            userDetails.balance -= currentBetAmount;
+            syncUserBalance();
+
+            userHasBetInCurrentRound = true;
+            userCashedOutInCurrentRound = false;
+            
+            updateGameActionButtonUI();
+        } else if (gameState === "FLIGHT") {
+            // User cashes out of the live flying round
+            if (userHasBetInCurrentRound && !userCashedOutInCurrentRound) {
+                userCashedOutInCurrentRound = true;
+                const wonAmount = currentBetAmount * liveMultiplier;
+                userDetails.balance += wonAmount;
+                syncUserBalance();
+
+                // Trigger Win sound
+                playWinChimeSound();
+
+                // Instantly update button to success win banner
+                const btn = document.getElementById('gameActionBtn');
+                btn.innerHTML = `WON +${wonAmount.toFixed(2)} ETB`;
+                btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+                btn.style.color = 'white';
+                btn.disabled = true;
+
+                const formattedDate = getFormattedDateTime();
+                const winTx = {
+                    type: "win",
+                    desc: `Aviator Won @ ${liveMultiplier.toFixed(2)}x`,
+                    amount: wonAmount,
+                    status: "Successful",
+                    time: formattedDate,
+                    icon: "📈"
+                };
+
+                if (loggedInUserPhone) {
+                    database.ref('users/' + loggedInUserPhone + '/transactions').push(winTx);
+                }
+                addHistoryBadge(liveMultiplier.toFixed(2) + "x");
+            }
+        }
+    }
+
+    function updateGameActionButtonUI() {
+        const btn = document.getElementById('gameActionBtn');
+        const betInput = document.getElementById('betAmount');
+
+        if (gameState === "PREPARATION") {
+            betInput.disabled = false;
+            if (userHasBetInCurrentRound) {
+                btn.innerHTML = `BET PLACED`;
+                btn.disabled = true;
+                btn.style.background = '#e6dfcb';
+                btn.style.color = 'var(--text-muted)';
+            } else {
+                btn.innerHTML = `BET`;
+                btn.disabled = false;
+                btn.style.background = 'linear-gradient(135deg, var(--accent-gold), var(--primary-gold))';
+                btn.style.color = '#ffffff';
+            }
+        } else if (gameState === "FLIGHT") {
+            betInput.disabled = true;
+            if (userHasBetInCurrentRound) {
+                if (userCashedOutInCurrentRound) {
+                    btn.disabled = true;
+                    // Keep the WON +XXX ETB text showing on the button
+                } else {
+                    btn.disabled = false;
+                    btn.style.background = 'linear-gradient(135deg, #ff4757, #ff6b81)';
+                    btn.style.color = 'white';
+                    const currentWin = currentBetAmount * liveMultiplier;
+                    btn.innerHTML = `CASH OUT <br><span style="font-size:1.1rem; color:#2ecc71; font-weight:800; display:block; margin-top:4px; text-shadow:0 0 10px rgba(46,204,113,0.5);">${currentWin.toFixed(2)} ETB</span>`;
+                }
+            } else {
+                btn.innerHTML = `Waiting for next round...`;
+                btn.disabled = true;
+                btn.style.background = '#faf8f5';
+                btn.style.color = 'var(--text-muted)';
+            }
+        } else if (gameState === "CRASHED") {
+            betInput.disabled = true;
+            if (userHasBetInCurrentRound && !userCashedOutInCurrentRound) {
+                btn.innerHTML = `LOST`;
+                btn.style.background = '#ff4757';
+                btn.style.color = '#ffffff';
+            } else {
+                btn.innerHTML = `FLEW AWAY`;
+                btn.style.background = '#e6dfcb';
+                btn.style.color = 'var(--text-muted)';
+            }
+            btn.disabled = true;
         }
     }
 
     function addHistoryBadge(multText) {
         const historyContainer = document.getElementById('multiplierHistory');
+        const badge = document.createElement('span');
+        badge.className = 'history-badge';
+        badge.innerText = multText;
+        
+        historyContainer.insertBefore(badge, historyContainer.firstChild);
+        
+        if (historyContainer.children.length > 5) {
+            historyContainer.removeChild(historyContainer.lastChild);
+        }
+    }
+
+    function addHistoryBadge(multText) {
+        const historyContainer = document.getElementById('multiplierHistory');
+        if (!historyContainer) return;
         const badge = document.createElement('span');
         badge.className = 'history-badge';
         badge.innerText = multText;
